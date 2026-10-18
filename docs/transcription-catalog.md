@@ -7,6 +7,8 @@ the later no-probe instruction are excluded from this table and no further live
 requests were made after that instruction. The two ElevenLabs Scribe rows and the
 eleven rows after them were added from OpenRouter page snapshots on 2026-10-18
 between about 15:30 and 15:45 UTC, without any live transcription request.
+These are dated snapshots. The app's OpenRouter price view fetches current
+OpenRouter prices, so use it when a row here may have changed.
 
 **Latency terminology.** `OpenRouter P50` is the provider-specific latency
 shown on that model page at the snapshot time, not end-to-end hotkey-to-paste

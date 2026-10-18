@@ -936,6 +936,7 @@ struct Settings {
 
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
+    @ObservedObject private var openRouterPrices = OpenRouterPriceBook.shared
     @StateObject private var permissionsManager = PermissionsManager()
     @Environment(\.dismiss) var dismiss
     @State private var isRecordingNewShortcut = false
@@ -1069,7 +1070,7 @@ struct SettingsView: View {
                 set: { viewModel.cloudModelSelection = $0 }
             )) {
                 ForEach(viewModel.cloudModels, id: \.key) { model in
-                    Text(cloudModelLabel(model)).tag(model.key)
+                    Text(cloudModelPickerLabel(model)).tag(model.key)
                 }
             }
             .labelsHidden()
@@ -1080,6 +1081,13 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if viewModel.cloudProviderCase == .openrouter {
+                OpenRouterPriceSummary(
+                    book: openRouterPrices,
+                    selectedModelID: viewModel.cloudModels.first(where: { $0.key == viewModel.cloudModelSelection })?.id
+                )
             }
 
             if viewModel.cloudProviderCase == .cloudflare, viewModel.cloudflareModel == "whisper" {
@@ -1212,6 +1220,15 @@ struct SettingsView: View {
             .font(.caption)
             .foregroundColor(.secondary)
             .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// OpenRouter entries carry their current list price, so models compare
+    /// at a glance. Without a fetched price the name stands alone.
+    private func cloudModelPickerLabel(_ model: CloudModel) -> String {
+        let label = cloudModelLabel(model)
+        guard viewModel.cloudProviderCase == .openrouter,
+              let price = openRouterPrices.price(for: model.id).shortLabel else { return label }
+        return label + " · " + price
     }
 
     private func cloudModelLabel(_ model: CloudModel) -> String {

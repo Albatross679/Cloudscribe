@@ -26,6 +26,20 @@ swiftc -O -o "$OUT/test_provider_clients" \
   "$ROOT/src/client/OpenRouterRequest.swift" \
   "$ROOT/scripts/test_provider_clients.swift"
 
+swiftc -O -parse-as-library -o "$OUT/test_openrouter_pricing" \
+  "$ROOT/src/client/UsageMetrics.swift" \
+  "$ROOT/src/client/CloudProvider.swift" \
+  "$ROOT/src/client/OpenRouterRequest.swift" \
+  "$ROOT/src/client/OpenRouterPricing.swift" \
+  "$ROOT/scripts/test_openrouter_pricing.swift"
+# The price chart view compiles against the same pricing source.
+swiftc -typecheck \
+  "$ROOT/src/client/UsageMetrics.swift" \
+  "$ROOT/src/client/CloudProvider.swift" \
+  "$ROOT/src/client/OpenRouterRequest.swift" \
+  "$ROOT/src/client/OpenRouterPricing.swift" \
+  "$ROOT/src/client/OpenRouterPriceView.swift"
+
 swiftc -O -o "$OUT/test_local_credentials" \
   "$ROOT/src/client/UsageMetrics.swift" \
   "$ROOT/src/client/CloudProvider.swift" \
@@ -60,6 +74,10 @@ echo "== Hugging Face and OpenRouter requests =="
 echo
 echo "== Provider clients, stubbed HTTP =="
 "$OUT/test_provider_clients"
+
+echo
+echo "== OpenRouter prices, saved endpoint fixture =="
+"$OUT/test_openrouter_pricing" "$ROOT/scripts/fixtures/openrouter-transcription-models.json"
 
 echo
 echo "== Local credential file, fake keys only =="
