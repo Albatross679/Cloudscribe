@@ -170,9 +170,11 @@ enum ProviderRequestTests {
             "qwen/qwen3-asr-1.7b",
             "qwen/qwen3-asr-0.6b",
             "openai/gpt-transcribe",
+            "elevenlabs/scribe-v2",
+            "elevenlabs/scribe-v2-medical",
         ]
         let ids = OpenRouterRequest.catalog.map(\.id)
-        check("all eight exact ids appear once", requested.allSatisfy { requestedID in ids.filter { $0 == requestedID }.count == 1 }, "\(ids)")
+        check("every requested id appears once", requested.allSatisfy { requestedID in ids.filter { $0 == requestedID }.count == 1 }, "\(ids)")
         check("default remains unchanged", OpenRouterRequest.defaultModelKey == "whisper-large-v3-turbo")
 
         for id in requested {

@@ -105,7 +105,7 @@ Other Hugging Face providers do serve Whisper: fal-ai, replicate, together, and 
 
 OpenRouter has had a dedicated speech-to-text endpoint since 2026-05-01, so audio does not go through chat completions as an `input_audio` content part. Requests go to `POST https://openrouter.ai/api/v1/audio/transcriptions` with the body `{"model", "input_audio": {"data": "<base64>", "format": "wav"}, "language"?}`. The response is `{"text", "usage": {"seconds", "total_tokens", "cost"}}`. A `multipart/form-data` form is accepted too for OpenAI SDK compatibility; JSON is used here because the body is then one comparable value that a unit test can assert on.
 
-`GET /api/v1/models?output_modalities=transcription` is the live catalogue. The picker offers the five established models plus eight requested models:
+`GET /api/v1/models?output_modalities=transcription` is the live catalogue. The picker offers the five established models plus ten requested models:
 
 | Key | Model | Why |
 |---|---|---|
@@ -122,6 +122,8 @@ OpenRouter has had a dedicated speech-to-text endpoint since 2026-05-01, so audi
 | `qwen3-asr-1.7b` | `qwen/qwen3-asr-1.7b` | Qwen multilingual ASR |
 | `qwen3-asr-0.6b` | `qwen/qwen3-asr-0.6b` | compact Qwen multilingual ASR |
 | `gpt-transcribe` | `openai/gpt-transcribe` | OpenAI STT |
+| `scribe-v2` | `elevenlabs/scribe-v2` | ElevenLabs multilingual STT |
+| `scribe-v2-medical` | `elevenlabs/scribe-v2-medical` | ElevenLabs STT tuned for medical terminology |
 
 For established models, language pinning works where the selected model permits it: `language` takes an ISO-639-1 code and is omitted entirely under auto-detect, because "auto" is not a code. Newly added models intentionally offer auto-detect only until their individual constraints are verified. The OpenRouter STT API does define optional `keyterms`, but support is model/provider-specific; this app does not send it, so it never claims vocabulary boosting. Uploads are capped at 25 MB, which the client checks before encoding so the message names a size rather than surfacing a truncated upload, and upstream providers time out after about 60 seconds. See [OpenRouter's STT reference](https://openrouter.ai/docs/api/api-reference/stt/create-transcription).
 

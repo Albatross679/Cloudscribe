@@ -4,7 +4,9 @@ Checked 2026-10-01 (OpenRouter page snapshot around 15:13 UTC). This is a
 catalogue of selectable transcription models, not an accuracy or latency
 benchmark. No user recordings were used. Preliminary paid requests made before
 the later no-probe instruction are excluded from this table and no further live
-requests were made after that instruction.
+requests were made after that instruction. The two ElevenLabs Scribe rows were
+added from an OpenRouter page snapshot on 2026-10-18 around 15:30 UTC, without
+any live transcription request.
 
 **Latency terminology.** `OpenRouter P50` is the provider-specific latency
 shown on that model page at the snapshot time, not end-to-end hotkey-to-paste
@@ -44,10 +46,12 @@ paid usage.
 | OpenRouter | `qwen/qwen3-asr-1.7b` | DeepInfra: $0.000008/audio sec (about $0.00048/audio min; display-rounded) | DeepInfra P50 1.74 s |
 | OpenRouter | `qwen/qwen3-asr-0.6b` | DeepInfra: $0.000003/audio sec (about $0.00018/audio min; display-rounded) | DeepInfra P50 0.81 s |
 | OpenRouter | `openai/gpt-transcribe` | OpenAI: $0.000075/audio sec ($0.0045/audio min) | OpenAI P50 0.77 s |
+| OpenRouter | `elevenlabs/scribe-v2` | ElevenLabs: $0.000031/audio sec (about $0.00183/audio min; display-rounded; launch price, half of list until 2026-10-19) | ElevenLabs P50 1.19 s |
+| OpenRouter | `elevenlabs/scribe-v2-medical` | ElevenLabs: $0.000031/audio sec (about $0.00183/audio min; display-rounded; launch price, half of list until 2026-10-19) | ElevenLabs P50 0.39 s |
 
 ## Primary sources
 
 - [Cloudflare Workers AI audio pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/#audio-model-pricing)
 - [Hugging Face Inference Providers pricing](https://huggingface.co/docs/inference-providers/pricing#hf-inference-cost)
 - [OpenRouter speech-to-text request and response schema](https://openrouter.ai/docs/api/api-reference/stt/create-transcription)
-- OpenRouter model pages: [Whisper Turbo](https://openrouter.ai/openai/whisper-large-v3-turbo), [Whisper Large V3](https://openrouter.ai/openai/whisper-large-v3), [Nova-3](https://openrouter.ai/deepgram/nova-3), [GPT-4o mini Transcribe](https://openrouter.ai/openai/gpt-4o-mini-transcribe), [GPT-4o Transcribe](https://openrouter.ai/openai/gpt-4o-transcribe), [Gemini 3.5 Transcribe](https://openrouter.ai/google/gemini-3.5-transcribe), [Fish Audio Transcribe 1 Pro](https://openrouter.ai/fish-audio/transcribe-1-pro), [Universal-3.5 Pro](https://openrouter.ai/assemblyai/universal-3-5-pro), [Muse Voice Transcribe 1.0](https://openrouter.ai/meta/muse-voice-transcribe-1.0), [MAI-Transcribe 2](https://openrouter.ai/microsoft/mai-transcribe-2), [Qwen3 ASR 1.7B](https://openrouter.ai/qwen/qwen3-asr-1.7b), [Qwen3 ASR 0.6B](https://openrouter.ai/qwen/qwen3-asr-0.6b), and [GPT Transcribe](https://openrouter.ai/openai/gpt-transcribe).
+- OpenRouter model pages: [Whisper Turbo](https://openrouter.ai/openai/whisper-large-v3-turbo), [Whisper Large V3](https://openrouter.ai/openai/whisper-large-v3), [Nova-3](https://openrouter.ai/deepgram/nova-3), [GPT-4o mini Transcribe](https://openrouter.ai/openai/gpt-4o-mini-transcribe), [GPT-4o Transcribe](https://openrouter.ai/openai/gpt-4o-transcribe), [Gemini 3.5 Transcribe](https://openrouter.ai/google/gemini-3.5-transcribe), [Fish Audio Transcribe 1 Pro](https://openrouter.ai/fish-audio/transcribe-1-pro), [Universal-3.5 Pro](https://openrouter.ai/assemblyai/universal-3-5-pro), [Muse Voice Transcribe 1.0](https://openrouter.ai/meta/muse-voice-transcribe-1.0), [MAI-Transcribe 2](https://openrouter.ai/microsoft/mai-transcribe-2), [Qwen3 ASR 1.7B](https://openrouter.ai/qwen/qwen3-asr-1.7b), [Qwen3 ASR 0.6B](https://openrouter.ai/qwen/qwen3-asr-0.6b), [GPT Transcribe](https://openrouter.ai/openai/gpt-transcribe), [Scribe v2](https://openrouter.ai/elevenlabs/scribe-v2), and [Scribe v2 Medical](https://openrouter.ai/elevenlabs/scribe-v2-medical).

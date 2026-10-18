@@ -124,6 +124,20 @@ enum OpenRouterRequest {
             languages: [],
             notes: "OpenAI's speech-to-text model; this app uses automatic language detection."
         ),
+        CloudModel(
+            key: "scribe-v2",
+            id: "elevenlabs/scribe-v2",
+            label: "ElevenLabs Scribe v2",
+            languages: [],
+            notes: "ElevenLabs multilingual speech-to-text; this app uses automatic language detection."
+        ),
+        CloudModel(
+            key: "scribe-v2-medical",
+            id: "elevenlabs/scribe-v2-medical",
+            label: "ElevenLabs Scribe v2 Medical",
+            languages: [],
+            notes: "ElevenLabs speech-to-text tuned for clinical and medical terminology."
+        ),
     ]
 
     static let defaultModelKey = "whisper-large-v3-turbo"
