@@ -138,6 +138,83 @@ enum OpenRouterRequest {
             languages: [],
             notes: "ElevenLabs speech-to-text tuned for clinical and medical terminology."
         ),
+        CloudModel(
+            key: "assemblyai-universal-3-6-pro",
+            id: "assemblyai/universal-3-6-pro",
+            label: "AssemblyAI Universal-3.6 Pro",
+            languages: [],
+            notes: "AssemblyAI synchronous transcription for clips up to 120 seconds; successor to Universal-3.5 Pro."
+        ),
+        CloudModel(
+            key: "fish-audio-transcribe-1",
+            id: "fish-audio/transcribe-1",
+            label: "Fish Audio Transcribe 1",
+            languages: [],
+            notes: "Fish Audio speech-to-text with automatic language detection."
+        ),
+        CloudModel(
+            key: "chirp-3",
+            id: "google/chirp-3",
+            label: "Google Chirp 3",
+            languages: [],
+            notes: "Google multilingual speech-to-text; this app uses automatic language detection."
+        ),
+        CloudModel(
+            key: "mai-transcribe-1.5",
+            id: "microsoft/mai-transcribe-1.5",
+            label: "Microsoft MAI-Transcribe 1.5",
+            languages: [],
+            notes: "Microsoft multilingual speech-to-text; this app uses automatic language detection."
+        ),
+        CloudModel(
+            key: "voxtral-mini-3b-2507",
+            id: "mistralai/voxtral-mini-3b-2507",
+            label: "Mistral Voxtral Mini 3B 2507",
+            languages: [],
+            notes: "Compact Mistral speech and audio understanding model."
+        ),
+        CloudModel(
+            key: "voxtral-mini-transcribe",
+            id: "mistralai/voxtral-mini-transcribe",
+            label: "Mistral Voxtral Mini Transcribe",
+            languages: [],
+            notes: "Mistral speech-to-text derived from the Voxtral Mini family."
+        ),
+        CloudModel(
+            key: "voxtral-small-24b-2507-stt",
+            id: "mistralai/voxtral-small-24b-2507-stt",
+            label: "Mistral Voxtral Small 24B 2507 STT",
+            languages: [],
+            notes: "Larger Mistral speech transcription model."
+        ),
+        CloudModel(
+            key: "nemotron-3.5-asr-streaming-multilingual-0.6b",
+            id: "nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b",
+            label: "NVIDIA Nemotron 3.5 ASR Multilingual 0.6B",
+            languages: [],
+            notes: "NVIDIA multilingual speech recognition, sent here as one whole recording."
+        ),
+        CloudModel(
+            key: "parakeet-tdt-0.6b-v3",
+            id: "nvidia/parakeet-tdt-0.6b-v3",
+            label: "NVIDIA Parakeet TDT 0.6B v3",
+            languages: [],
+            notes: "NVIDIA multilingual speech-to-text for European languages."
+        ),
+        CloudModel(
+            key: "whisper-1",
+            id: "openai/whisper-1",
+            label: "OpenAI Whisper 1",
+            languages: [],
+            notes: "OpenAI's hosted Whisper API model."
+        ),
+        CloudModel(
+            key: "grok-stt-1.0",
+            id: "x-ai/grok-stt-1.0",
+            label: "Grok STT 1.0",
+            languages: [],
+            notes: "xAI speech-to-text; this app uses automatic language detection."
+        ),
     ]
 
     static let defaultModelKey = "whisper-large-v3-turbo"

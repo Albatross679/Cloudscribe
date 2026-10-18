@@ -105,7 +105,7 @@ Other Hugging Face providers do serve Whisper: fal-ai, replicate, together, and 
 
 OpenRouter has had a dedicated speech-to-text endpoint since 2026-05-01, so audio does not go through chat completions as an `input_audio` content part. Requests go to `POST https://openrouter.ai/api/v1/audio/transcriptions` with the body `{"model", "input_audio": {"data": "<base64>", "format": "wav"}, "language"?}`. The response is `{"text", "usage": {"seconds", "total_tokens", "cost"}}`. A `multipart/form-data` form is accepted too for OpenAI SDK compatibility; JSON is used here because the body is then one comparable value that a unit test can assert on.
 
-`GET /api/v1/models?output_modalities=transcription` is the live catalogue. The picker offers the five established models plus ten requested models:
+`GET /api/v1/models?output_modalities=transcription` is the live catalogue. The picker offers the five established models plus 21 requested models:
 
 | Key | Model | Why |
 |---|---|---|
@@ -124,6 +124,17 @@ OpenRouter has had a dedicated speech-to-text endpoint since 2026-05-01, so audi
 | `gpt-transcribe` | `openai/gpt-transcribe` | OpenAI STT |
 | `scribe-v2` | `elevenlabs/scribe-v2` | ElevenLabs multilingual STT |
 | `scribe-v2-medical` | `elevenlabs/scribe-v2-medical` | ElevenLabs STT tuned for medical terminology |
+| `assemblyai-universal-3-6-pro` | `assemblyai/universal-3-6-pro` | AssemblyAI synchronous STT, successor to Universal-3.5 Pro |
+| `fish-audio-transcribe-1` | `fish-audio/transcribe-1` | Fish Audio STT |
+| `chirp-3` | `google/chirp-3` | Google multilingual STT |
+| `mai-transcribe-1.5` | `microsoft/mai-transcribe-1.5` | Microsoft multilingual STT |
+| `voxtral-mini-3b-2507` | `mistralai/voxtral-mini-3b-2507` | compact Mistral speech model |
+| `voxtral-mini-transcribe` | `mistralai/voxtral-mini-transcribe` | Mistral STT |
+| `voxtral-small-24b-2507-stt` | `mistralai/voxtral-small-24b-2507-stt` | larger Mistral STT |
+| `nemotron-3.5-asr-streaming-multilingual-0.6b` | `nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b` | NVIDIA multilingual ASR |
+| `parakeet-tdt-0.6b-v3` | `nvidia/parakeet-tdt-0.6b-v3` | NVIDIA multilingual STT |
+| `whisper-1` | `openai/whisper-1` | OpenAI hosted Whisper |
+| `grok-stt-1.0` | `x-ai/grok-stt-1.0` | xAI STT |
 
 For established models, language pinning works where the selected model permits it: `language` takes an ISO-639-1 code and is omitted entirely under auto-detect, because "auto" is not a code. Newly added models intentionally offer auto-detect only until their individual constraints are verified. The OpenRouter STT API does define optional `keyterms`, but support is model/provider-specific; this app does not send it, so it never claims vocabulary boosting. Uploads are capped at 25 MB, which the client checks before encoding so the message names a size rather than surfacing a truncated upload, and upstream providers time out after about 60 seconds. See [OpenRouter's STT reference](https://openrouter.ai/docs/api/api-reference/stt/create-transcription).
 
