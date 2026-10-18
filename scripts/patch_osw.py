@@ -71,6 +71,8 @@ def add_engine_file() -> None:
         ("CloudProvider.swift", "Engines"),
         ("HuggingFaceRequest.swift", "Engines"),
         ("OpenRouterRequest.swift", "Engines"),
+        ("OpenRouterPricing.swift", "Engines"),
+        ("OpenRouterPriceView.swift", "Engines"),
         ("CloudflareUsageView.swift", "Engines"),
         ("UsageMetrics.swift", "Engines"),
         ("UsageSelection.swift", "Engines"),
@@ -416,12 +418,12 @@ def patch_settings() -> None:
                         try await refreshCloudflareAccountsForTest()
                     }
                     let models = try await CloudflareEngine.client.validateConnection()
-                    cloudflareTestStatus = .ok("Connected. \(models.count) models available.")
+                    cloudflareTestStatus = .ok("Connected. \\(models.count) models available.")
                 } else {
                     // Reports a rejected key, an unreachable host, and a
                     // refused request as three different messages.
                     let models = try await CloudflareEngine.transcriber.validateConnection()
-                    cloudflareTestStatus = .ok("Connected to \(cloudProviderCase.label). \(models.count) models available.")
+                    cloudflareTestStatus = .ok("Connected to \\(cloudProviderCase.label). \\(models.count) models available.")
                 }
                 TranscriptionService.shared.reloadEngine()
             } catch {
@@ -714,7 +716,7 @@ def patch_settings() -> None:
                         }
                     }
                 } else if let account = viewModel.cloudflareAccounts.first {
-                    Text("Using Cloudflare account: \(account.name)")
+                    Text("Using Cloudflare account: \\(account.name)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -1667,6 +1669,52 @@ def patch_usage_metrics() -> None:
           "Usage: cross-provider dashboard entry")
 
 
+def patch_openrouter_prices() -> None:
+    """Current OpenRouter list prices beside each picker entry and under it."""
+    path = APP / "Settings.swift"
+    patch(
+        path,
+        "    @StateObject private var viewModel = SettingsViewModel()",
+        """    @StateObject private var viewModel = SettingsViewModel()
+    @ObservedObject private var openRouterPrices = OpenRouterPriceBook.shared""",
+        "Settings: OpenRouter price book",
+    )
+    patch(
+        path,
+        "                    Text(cloudModelLabel(model)).tag(model.key)",
+        "                    Text(cloudModelPickerLabel(model)).tag(model.key)",
+        "Settings: OpenRouter picker prices",
+    )
+    patch(
+        path,
+        """            if viewModel.cloudProviderCase == .cloudflare, viewModel.cloudflareModel == "whisper" {""",
+        """            if viewModel.cloudProviderCase == .openrouter {
+                OpenRouterPriceSummary(
+                    book: openRouterPrices,
+                    selectedModelID: viewModel.cloudModels.first(where: { $0.key == viewModel.cloudModelSelection })?.id
+                )
+            }
+
+            if viewModel.cloudProviderCase == .cloudflare, viewModel.cloudflareModel == "whisper" {""",
+        "Settings: OpenRouter selected price",
+    )
+    patch(
+        path,
+        "    private func cloudModelLabel(_ model: CloudModel) -> String {",
+        """    /// OpenRouter entries carry their current list price, so models compare
+    /// at a glance. Without a fetched price the name stands alone.
+    private func cloudModelPickerLabel(_ model: CloudModel) -> String {
+        let label = cloudModelLabel(model)
+        guard viewModel.cloudProviderCase == .openrouter,
+              let price = openRouterPrices.price(for: model.id).shortLabel else { return label }
+        return label + " · " + price
+    }
+
+    private func cloudModelLabel(_ model: CloudModel) -> String {""",
+        "Settings: OpenRouter picker label",
+    )
+
+
 def main() -> int:
     clone()
     print("Patching:")
@@ -1687,6 +1735,7 @@ def main() -> int:
         patch_failure_paths()
         patch_content_view()
         patch_usage_metrics()
+        patch_openrouter_prices()
     except PatchError as err:
         print(f"\nFAILED: {err}", file=sys.stderr)
         print("Upstream changed. Fix the anchor in this script and rerun.", file=sys.stderr)

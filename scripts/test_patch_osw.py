@@ -37,6 +37,7 @@ with tempfile.TemporaryDirectory(prefix="osw-patch-tests-") as directory:
         patcher.patch_onboarding, patcher.patch_language_util,
         patcher.patch_fluidaudio_engine, patcher.patch_transcription_settings,
         patcher.patch_failure_paths, patcher.patch_content_view, patcher.patch_usage_metrics,
+        patcher.patch_openrouter_prices,
     ]
     def snapshot():
         return {str(p.relative_to(patcher.APP)): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -78,6 +79,9 @@ with tempfile.TemporaryDirectory(prefix="osw-patch-tests-") as directory:
         assert 'recordingID: metricID' in flow
     assert 'metricID: recording.id, recordedAt: recording.timestamp' in (patcher.APP / "TranscriptionQueue.swift").read_text()
     assert 'UsageDashboardButton()' in (patcher.APP / "ContentView.swift").read_text()
+    assert settings.count('OpenRouterPriceSummary(') == 1
+    assert settings.count('Text(cloudModelPickerLabel(model)).tag(model.key)') == 1
+    assert (patcher.APP / "Engines/OpenRouterPricing.swift").exists()
     for name in ('UsageMetrics.swift', 'UsageSelection.swift', 'UsageDashboard.swift'):
         assert (patcher.APP / 'Engines' / name).read_bytes() == (ROOT / 'src/client' / name).read_bytes()
     print("PASS fresh full patch and idempotent rerun, accessible engine bar, credentials, original-duration metrics, retry identity and native dashboard")
