@@ -303,6 +303,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let menu = NSMenu()
         
         menu.addItem(NSMenuItem(title: "OpenSuperWhisper", action: #selector(openApp), keyEquivalent: "o"))
+        // Shown here, chosen only in Settings. Without an action it stays disabled.
+        let activeEngine = SpeechRecognitionChoice.resolve(
+            engine: AppPreferences.shared.selectedEngine, provider: AppPreferences.shared.cloudProvider)
+        menu.addItem(NSMenuItem(title: activeEngine.menuBarTitle, action: nil, keyEquivalent: ""))
         
         let transcriptionLanguageItem = NSMenuItem(title: "Language", action: nil, keyEquivalent: "")
         languageSubmenu = NSMenu()

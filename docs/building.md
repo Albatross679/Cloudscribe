@@ -74,7 +74,7 @@ Builds stamp their own version and provenance into `Info.plist` (`CFBundleShortV
 
 ## Local regression tests
 
-`npm test` covers client encoders, stubbed HTTP, private local-file credential persistence and offline audio speed without real credentials or paid requests. After `python3 scripts/patch_osw.py`, run `scripts/test_shortcuts.sh` to test the actual pinned shortcut dispatch and mouse-event filtering with isolated test dependencies, plus fresh full patch generation, idempotent reruns and the accessible full-width picker layout contract. That command does not create event taps, post global input, record audio, or alter preferences. Installed hotkey permissions and physical recorder behavior still require a GUI check.
+`npm test` covers client encoders, stubbed HTTP, private local-file credential persistence, offline audio speed and the Settings engine choice without real credentials or paid requests. The engine choice test opens two small windows in its own never-activated process to check that a click which only focuses Settings cannot change the engine. After `python3 scripts/patch_osw.py`, run `scripts/test_shortcuts.sh` to test the actual pinned shortcut dispatch and mouse-event filtering with isolated test dependencies, plus fresh full patch generation, idempotent reruns and the engine selector contract. That command does not create event taps, post global input, record audio, or alter preferences. Installed hotkey permissions and physical recorder behavior still require a GUI check.
 
 ## How the patching works
 

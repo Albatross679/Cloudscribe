@@ -58,6 +58,19 @@ class SettingsViewModel: ObservableObject {
         }
     }
 
+    /// Whether the Local tab is open. It stays open with a cloud engine
+    /// still active until the user picks Parakeet or Whisper.
+    @Published var showsLocalEngines = SpeechRecognitionChoice.resolve(
+        engine: AppPreferences.shared.selectedEngine, provider: AppPreferences.shared.cloudProvider).isLocal
+
+    var engineSelection: EngineSelection {
+        get { EngineSelection(choice: recognitionChoice, showsLocal: showsLocalEngines) }
+        set {
+            showsLocalEngines = newValue.showsLocal
+            if recognitionChoice != newValue.choice { recognitionChoice = newValue.choice }
+        }
+    }
+
     /// Present old engine/provider settings as one choice without rewriting
     /// credentials, models, or the remembered cloud provider for local engines.
     var recognitionChoice: SpeechRecognitionChoice {
@@ -1320,21 +1333,13 @@ struct SettingsView: View {
                     .font(.headline)
                     .foregroundColor(.primary)
                 
-                Picker("Engine", selection: Binding(
-                    get: { viewModel.recognitionChoice },
-                    set: { viewModel.recognitionChoice = $0 }
-                )) {
-                    ForEach(SpeechRecognitionChoice.allCases, id: \.rawValue) { choice in
-                        Text(choice.label).tag(choice)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .accessibilityLabel("Engine")
-                .frame(maxWidth: .infinity)
+                EngineChoiceSelector(
+                    selection: $viewModel.engineSelection,
+                    cloudModelLabel: viewModel.cloudModels.first { $0.key == viewModel.cloudModelSelection }.map(cloudModelLabel)
+                )
                 .padding(.bottom, 8)
 
-                if viewModel.selectedEngine == "cloudflare" {
+                if viewModel.selectedEngine == "cloudflare" && !viewModel.showsLocalEngines {
                     cloudflareSettings
                 }
                 
