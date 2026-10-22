@@ -32,7 +32,8 @@ class PatchError(Exception):
 PATCH_SENTINELS = {
     "Settings: view model properties": "    @Published var cloudflareEndpoint: String {",
     "Settings: cloudflare panel": "    private var cloudflareSettings: some View {",
-    "Settings: engine picker": '                    get: { viewModel.recognitionChoice },',
+    "Settings: engine picker": "                EngineChoiceSelector(",
+    "Settings: label-free full-width engine picker": "                EngineChoiceSelector(",
     "Usage: original duration and run": "let metricRun = store.begin(UsageDictation",
     "ContentView: usage readout": "                                UsageDashboardButton()",
     "ContentView.swift: surface dictation failures": "await DictationFailure.record(audioAt: tempURL, error: error, recordingID: metricID)",
@@ -77,6 +78,7 @@ def add_engine_file() -> None:
         ("UsageMetrics.swift", "Engines"),
         ("UsageSelection.swift", "Engines"),
         ("UsageDashboard.swift", "Engines"),
+        ("EngineChoiceSelector.swift", "Engines"),
         ("DictationFailure.swift", "Engines"),
         ("AuthTokenStore.swift", "Utils"),
         ("LocalCredentialStore.swift", "Utils"),
@@ -1715,6 +1717,75 @@ def patch_openrouter_prices() -> None:
     )
 
 
+def patch_local_engine_tab() -> None:
+    """One Local tab for Parakeet and Whisper, and engine changes only on a
+    deliberate pick.
+
+    The old segmented bar acted on the click that merely focused an inactive
+    Settings window, so a stray click on its first segment, Parakeet, moved
+    dictation to a local model. The new bar ignores that click, and opening
+    Local switches nothing until Parakeet or Whisper is picked.
+    """
+    path = APP / "Settings.swift"
+    patch(
+        path,
+        """    /// Present old engine/provider settings as one choice without rewriting""",
+        """    /// Whether the Local tab is open. It stays open with a cloud engine
+    /// still active until the user picks Parakeet or Whisper.
+    @Published var showsLocalEngines = SpeechRecognitionChoice.resolve(
+        engine: AppPreferences.shared.selectedEngine, provider: AppPreferences.shared.cloudProvider).isLocal
+
+    var engineSelection: EngineSelection {
+        get { EngineSelection(choice: recognitionChoice, showsLocal: showsLocalEngines) }
+        set {
+            showsLocalEngines = newValue.showsLocal
+            if recognitionChoice != newValue.choice { recognitionChoice = newValue.choice }
+        }
+    }
+
+    /// Present old engine/provider settings as one choice without rewriting""",
+        "Settings: local engine tab state",
+    )
+    patch(
+        path,
+        """                Picker("Engine", selection: Binding(
+                    get: { viewModel.recognitionChoice },
+                    set: { viewModel.recognitionChoice = $0 }
+                )) {
+                    ForEach(SpeechRecognitionChoice.allCases, id: \\.rawValue) { choice in
+                        Text(choice.label).tag(choice)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .accessibilityLabel("Engine")
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, 8)
+
+                if viewModel.selectedEngine == "cloudflare" {""",
+        """                EngineChoiceSelector(
+                    selection: $viewModel.engineSelection,
+                    cloudModelLabel: viewModel.cloudModels.first { $0.key == viewModel.cloudModelSelection }.map(cloudModelLabel)
+                )
+                .padding(.bottom, 8)
+
+                if viewModel.selectedEngine == "cloudflare" && !viewModel.showsLocalEngines {""",
+        "Settings: local engine tab",
+    )
+    patch(
+        APP / "OpenSuperWhisperApp.swift",
+        """        menu.addItem(NSMenuItem(title: "OpenSuperWhisper", action: #selector(openApp), keyEquivalent: "o"))
+""",
+        """        menu.addItem(NSMenuItem(title: "OpenSuperWhisper", action: #selector(openApp), keyEquivalent: "o"))
+        // Shown here, chosen only in Settings. Without an action it stays disabled.
+        let activeEngine = SpeechRecognitionChoice.resolve(
+            engine: AppPreferences.shared.selectedEngine, provider: AppPreferences.shared.cloudProvider)
+        menu.addItem(NSMenuItem(title: activeEngine.menuBarTitle, action: nil, keyEquivalent: ""))
+""",
+        "Menu bar: active engine",
+    )
+
+
 def main() -> int:
     clone()
     print("Patching:")
@@ -1736,6 +1807,7 @@ def main() -> int:
         patch_content_view()
         patch_usage_metrics()
         patch_openrouter_prices()
+        patch_local_engine_tab()
     except PatchError as err:
         print(f"\nFAILED: {err}", file=sys.stderr)
         print("Upstream changed. Fix the anchor in this script and rerun.", file=sys.stderr)

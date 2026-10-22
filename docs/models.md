@@ -1,6 +1,6 @@
 # Choosing a model
 
-Cloudflare is the default provider and the rest of this page is about it. The single Settings > Models > Engine bar also offers Hugging Face and OpenRouter, alongside local Parakeet and Whisper; skip to [Other providers](#other-providers) for what they can and cannot do.
+Cloudflare is the default provider and the rest of this page is about it. The single Settings > Models > Engine bar also offers Hugging Face and OpenRouter, alongside a Local tab holding Parakeet and Whisper; skip to [Other providers](#other-providers) for what they can and cannot do.
 
 Measured against this account, not quoted from vendor docs.
 

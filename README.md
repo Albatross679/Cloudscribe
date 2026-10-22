@@ -45,7 +45,7 @@ You do **not** need to deploy a Worker. The app can call Workers AI in your Clou
 
 ## Other providers
 
-Cloudflare remains the default cloud provider. **Settings > Models > Engine** has one bar with **Parakeet**, **Whisper**, **Cloudflare**, **Hugging Face**, and **OpenRouter**. The first two run locally; the other three upload to their selected provider. Each provider keeps a separate API key in a private local settings file, so switching never overwrites another key. **Test Connection** is available for all three; a valid key does not guarantee access to every model.
+Cloudflare remains the default cloud provider. **Settings > Models > Engine** has one bar with **Local**, **Cloudflare**, **Hugging Face**, and **OpenRouter**. **Local** holds **Parakeet** and **Whisper**, which run on this Mac; opening it switches nothing until you pick one of them, and only then is its model downloaded. The other three upload to their selected provider. A line under the bar and the first item of the menu bar menu name the engine dictation uses. A click that only brings an inactive Settings window forward never changes the engine. Each provider keeps a separate API key in a private local settings file, so switching never overwrites another key. **Test Connection** is available for all three; a valid key does not guarantee access to every model.
 
 ### Local API key settings
 

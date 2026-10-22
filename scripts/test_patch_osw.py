@@ -37,7 +37,7 @@ with tempfile.TemporaryDirectory(prefix="osw-patch-tests-") as directory:
         patcher.patch_onboarding, patcher.patch_language_util,
         patcher.patch_fluidaudio_engine, patcher.patch_transcription_settings,
         patcher.patch_failure_paths, patcher.patch_content_view, patcher.patch_usage_metrics,
-        patcher.patch_openrouter_prices,
+        patcher.patch_openrouter_prices, patcher.patch_local_engine_tab,
     ]
     def snapshot():
         return {str(p.relative_to(patcher.APP)): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -54,14 +54,16 @@ with tempfile.TemporaryDirectory(prefix="osw-patch-tests-") as directory:
         step()
     assert snapshot() == first, "patch rerun changed generated source"
     settings = (patcher.APP / "Settings.swift").read_text()
-    assert settings.count('Picker("Engine",') == 1
+    assert 'Picker("Engine",' not in settings, "SwiftUI's segmented engine bar acts on focus clicks"
     assert 'Picker("Provider",' not in settings
-    start = settings.index('Picker("Engine",')
-    end = settings.index('.padding(.bottom, 8)', start)
-    picker = settings[start:end]
-    for required in ['SpeechRecognitionChoice.allCases', '.labelsHidden()',
-                     '.accessibilityLabel("Engine")', '.frame(maxWidth: .infinity)']:
-        assert required in picker, f"missing picker layout contract: {required}"
+    assert settings.count('EngineChoiceSelector(') == 1
+    assert settings.count('selection: $viewModel.engineSelection,') == 1
+    assert 'if viewModel.selectedEngine == "cloudflare" && !viewModel.showsLocalEngines {' in settings
+    selector = (patcher.APP / "Engines/EngineChoiceSelector.swift").read_text()
+    for required in ['override func acceptsFirstMouse(for event: NSEvent?) -> Bool { false }',
+                     'EngineTab.allCases', 'accessibilityLabel: "Engine"', '.frame(maxWidth: .infinity)']:
+        assert required in selector, f"missing engine selector contract: {required}"
+    assert 'activeEngine.menuBarTitle' in (patcher.APP / "OpenSuperWhisperApp.swift").read_text()
     assert 'credentialStorageMessage' in settings
     assert 'isRefreshingCloudCredentials' in settings
     assert 'it stays in this Mac\'s Keychain' not in settings
@@ -82,6 +84,6 @@ with tempfile.TemporaryDirectory(prefix="osw-patch-tests-") as directory:
     assert settings.count('OpenRouterPriceSummary(') == 1
     assert settings.count('Text(cloudModelPickerLabel(model)).tag(model.key)') == 1
     assert (patcher.APP / "Engines/OpenRouterPricing.swift").exists()
-    for name in ('UsageMetrics.swift', 'UsageSelection.swift', 'UsageDashboard.swift'):
+    for name in ('UsageMetrics.swift', 'UsageSelection.swift', 'UsageDashboard.swift', 'EngineChoiceSelector.swift'):
         assert (patcher.APP / 'Engines' / name).read_bytes() == (ROOT / 'src/client' / name).read_bytes()
-    print("PASS fresh full patch and idempotent rerun, accessible engine bar, credentials, original-duration metrics, retry identity and native dashboard")
+    print("PASS fresh full patch and idempotent rerun, local engine tab, credentials, original-duration metrics, retry identity and native dashboard")
