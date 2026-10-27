@@ -1,53 +1,53 @@
 # OSW Cloud
 
-Active source is migrating to this genuine [OpenSuperWhisper fork](https://github.com/Albatross679/OpenSuperWhisper). The original [cloud-dictation repository](https://github.com/Albatross679/cloud-dictation) is retained for history and existing release downloads. This migration preserves the installed app's pinned upstream bef6bc0 behavior; upstream `develop` and its later changes are retained separately. See [migration boundaries](docs/repository-migration.md) and the [original upstream README](docs/upstream-readme.md).
+OSW Cloud 0.2.0 is dictation for macOS. Hold a hotkey, speak, and the text is typed into whatever app has focus. Speech is transcribed either on this Mac or by a cloud provider you choose.
 
-Dictation for macOS that transcribes on Cloudflare Workers AI instead of on your Mac.
+It is a fork of [Starmel/OpenSuperWhisper](https://github.com/Starmel/OpenSuperWhisper) (MIT, see [LICENSE](LICENSE)). The original [cloud-dictation repository](https://github.com/Albatross679/cloud-dictation) is kept for history and old release downloads. See [migration boundaries](docs/repository-migration.md) and the [original upstream README](docs/upstream-readme.md).
 
-Hold a hotkey, speak, and the text lands in whatever app has focus.
+## Engines
 
-Built on **[Starmel/OpenSuperWhisper](https://github.com/Starmel/OpenSuperWhisper)** (MIT)
+**Settings > Models > Engine** has one bar with four tabs.
 
-## Why
+- **Local** holds **Parakeet** and **Whisper**, which run on this Mac. Opening the tab switches nothing until you pick one of them, and only then is its model downloaded.
+- **Cloudflare** calls Workers AI in your Cloudflare account directly. No Worker deploy is needed. This is the default cloud provider, and Nova-3 is its default model.
+- **Hugging Face** calls Inference Providers.
+- **OpenRouter** offers 26 transcription models and shows their current prices.
 
-Commercial dictation apps run $8 to $15 a month. Cloudflare gives 10,000 neurons per day free, on the free plan and the paid plan alike. For people who don't really use the free neurons, dictation would be a way to take advantage of that.
+A line under the bar and the first item of the menu bar menu name the engine dictation uses. A click that only brings an inactive Settings window forward never changes the engine. Each cloud provider keeps its own API key, and **Test Connection** checks it. A valid key does not guarantee access to every model.
 
-### Price
+## Install
 
-|Daily dictation|This, on Whisper base|This, on Nova-3|Wispr Flow|
-|---|---|---|---|
-|30 min|**$0**|$1.38/mo|$15/mo|
-|1 hr|**$0**|$6.06/mo|$15/mo|
+Version 0.2.0 has no prebuilt download yet. Build it from source:
 
-### Latency
+```bash
+git clone --recurse-submodules https://github.com/Albatross679/OpenSuperWhisper.git
+cd OpenSuperWhisper
+./scripts/create_signing_identity.sh   # once, keeps macOS permissions across rebuilds
+./scripts/build_app.sh
+```
 
-|                   | This, on Whisper base | This, on Nova-3 | Wispr Flow         |
-| ----------------- | --------------- | --------------- | ------------------------ |
-| Latency, 9 s clip | ~1,250 ms       | **433 ms**      | <700 ms (vendor-claimed) |
+The build needs Xcode, cmake, Rust and libomp. It produces `build/Build/Products/Release/OpenSuperWhisper.app`, shown as `OSW Cloud`. Copy it to `/Applications/OSW Cloud.app`. See [docs/building.md](docs/building.md) for requirements, signing and packaging.
 
-## Install and configure - Direct API (recommended)
+The older 0.1.0 release is still available as a [DMG](https://github.com/Albatross679/cloud-dictation/releases/download/v0.1.0/OSW.Cloud.dmg) or with `brew install --cask albatross679/tap/osw-cloud`. It does not have the 0.2.0 changes listed in [docs/release-notes.md](docs/release-notes.md).
 
-You do **not** need to deploy a Worker. The app can call Workers AI in your Cloudflare account directly.
+## Cloudflare
 
-1. **Download [OSW Cloud v0.1.0](https://github.com/Albatross679/cloud-dictation/releases/download/v0.1.0/OSW.Cloud.dmg)**, open the DMG, and drag `OSW Cloud.app` to `/Applications`. Or install with Homebrew: `brew install --cask albatross679/tap/osw-cloud`.
-2. **Create a Cloudflare account** if you do not already have one.
-3. In the Cloudflare dashboard, **AI in the left side panel -> Workers AI -> Rest API -> Create API Token**
+1. Create a Cloudflare account if you do not already have one.
+2. In the Cloudflare dashboard, open **AI -> Workers AI -> Rest API -> Create API Token**.
    <img src="attachments/workers-ai-rest-api.png" width="600" alt="Cloudflare dashboard: Workers AI page with the REST API button">
    <img src="attachments/create-api-token.png" width="600" alt="Using Workers AI REST API page with the Create a Workers AI API Token panel">
-4. On a fresh launch, the app walks you through creating, testing, and saving a Direct API token in one window. You can also open **Settings > Models > Engine > Cloudflare**; paste **only the API token**. Use **Test Connection** to surface an invalid token or account before dictating.
+3. On a fresh launch the app walks you through creating, testing and saving the token in one window. You can also open **Settings > Models > Engine > Cloudflare** and paste only the API token.
    <img src="attachments/app-settings-direct-api.png" width="475" alt="App settings: Cloudflare engine, Direct API connection, token pasted">
+
+Cloudflare gives 10,000 neurons per day free on every plan. See [docs/models.md](docs/models.md) for models, languages and measured cost.
 
 ### Settings worth knowing
 
 - **Transcription > Language.** Nova-3 serves ten languages and errors on the rest. For anything else pick `whisper-turbo`.
-- **Transcription > Vocabulary.** A comma separated term list, not prose. `R2, Kubernetes, Workers AI`. It measurably fixes proper nouns.
-- **Cloud provider > Audio speed.** Choose `1`, `1.25`, `1.5`, `1.75`, `2`, `2.25`, `2.5`, `2.75`, or `3`; default `1` uploads the original recording unchanged. Higher speeds preserve pitch and cut billed audio minutes, but trade accuracy for cost - see the measured WER deltas in [asr-compression-cost](https://github.com/Albatross679/asr-compression-cost). 1.5 is recommended.
+- **Transcription > Vocabulary.** A comma separated term list, not prose, for example `R2, Kubernetes, Workers AI`. It fixes proper nouns.
+- **Cloud provider > Audio speed.** Choose from `1` to `3` in steps of `0.25`. The default `1` uploads the original recording unchanged. Higher speeds keep pitch and cut billed audio minutes but lower accuracy, see [asr-compression-cost](https://github.com/Albatross679/asr-compression-cost).
 
-## Other providers
-
-Cloudflare remains the default cloud provider. **Settings > Models > Engine** has one bar with **Local**, **Cloudflare**, **Hugging Face**, and **OpenRouter**. **Local** holds **Parakeet** and **Whisper**, which run on this Mac; opening it switches nothing until you pick one of them, and only then is its model downloaded. The other three upload to their selected provider. A line under the bar and the first item of the menu bar menu name the engine dictation uses. A click that only brings an inactive Settings window forward never changes the engine. Each provider keeps a separate API key in a private local settings file, so switching never overwrites another key. **Test Connection** is available for all three; a valid key does not guarantee access to every model.
-
-### Local API key settings
+## How keys are stored
 
 API keys are **plaintext**, stored at `~/Library/Application Support/OSW Cloud/credentials.json`, not embedded in the app. The file is mode `0600`, its parent is `0700`, and writes are atomic. Other processes running as your Mac user and backups can still read it. This storage tradeoff was explicitly approved; keep the file private and out of git, app bundles and shared archives.
 
@@ -55,7 +55,7 @@ When the file is missing, the app attempts one no-prompt import of existing Keyc
 
 **Import keys from environment** is an explicit Settings action and never replaces an existing key. It reads `CLOUD_DICTATION_WORKER_TOKEN`, `CLOUD_DICTATION_DIRECT_API_TOKEN`, `HF_TOKEN`, and `OPENROUTER_API_KEY` from the app process environment. GUI-launched apps may not inherit your shell environment, so pasting into the selected provider's key field is usually simpler. No Mac password is collected by the app.
 
-### Hugging Face
+## Hugging Face
 
 1. Create a fine-grained access token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens/new?ownUserPermissions=inference.serverless.write&tokenType=fineGrained) with the **Make calls to Inference Providers** permission.
 2. Paste it into the key field. There is no account or endpoint to configure.
@@ -64,7 +64,7 @@ Models are `openai/whisper-large-v3-turbo` (default) and `openai/whisper-large-v
 
 Cost: Inference Providers bills per request against a free monthly credit allowance, with more credit on PRO. See [the pricing page](https://huggingface.co/docs/inference-providers/pricing) for current rates.
 
-### OpenRouter
+## OpenRouter
 
 1. Create a key at [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys) and add credit.
 2. Paste it into the key field.
@@ -73,7 +73,7 @@ Models include the existing `openai/whisper-large-v3-turbo` (default), `openai/w
 
 Cost: pay per request with no subscription, at each upstream provider's rate plus OpenRouter's fee. The picker shows each model's current OpenRouter list price, and **Compare all OpenRouter prices** under it charts every model, per audio minute or per 1M tokens. Prices are fetched without a key and cached, so they still show offline, marked possibly outdated. Every response reports its own `usage.cost`, and the [activity page](https://openrouter.ai/activity) is the authority. Recordings are capped at 25 MB and upstream providers time out after about 60 seconds.
 
-### What each provider can do
+## What each provider can do
 
 | | Cloudflare | Hugging Face | OpenRouter |
 |---|---|---|---|
@@ -109,6 +109,8 @@ repos/            upstream checkout, generated, gitignored
 
 ## Docs
 
+- [docs/release-notes.md](docs/release-notes.md) - what changed in each version
+- [docs/transcription-catalog.md](docs/transcription-catalog.md) - every selectable model with dated public prices
 - [docs/models.md](docs/models.md) - which model to pick, languages, vocabulary, measured accuracy and cost
 - [docs/api.md](docs/api.md) - worker endpoints and parameters
 - [docs/building.md](docs/building.md) - build requirements, signing, packaging, reproducibility
