@@ -188,6 +188,20 @@ enum OpenRouterRequest {
             notes: "Larger Mistral speech transcription model."
         ),
         CloudModel(
+            key: "voxtral-mini-transcribe-3-0",
+            id: "mistralai/voxtral-mini-transcribe-3-0",
+            label: "Mistral Voxtral Mini Transcribe 3",
+            languages: [],
+            notes: "Compact Mistral speech-to-text model, third generation."
+        ),
+        CloudModel(
+            key: "voxtral-small-transcribe-3-0",
+            id: "mistralai/voxtral-small-transcribe-3-0",
+            label: "Mistral Voxtral Small Transcribe 3",
+            languages: [],
+            notes: "Mistral's flagship speech-to-text model, third generation."
+        ),
+        CloudModel(
             key: "nemotron-3.5-asr-streaming-multilingual-0.6b",
             id: "nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b",
             label: "NVIDIA Nemotron 3.5 ASR Multilingual 0.6B",

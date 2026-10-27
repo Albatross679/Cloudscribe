@@ -46,6 +46,8 @@ enum OpenRouterPricing {
         "mistralai/voxtral-mini-3b-2507": .audioSecond,
         "mistralai/voxtral-mini-transcribe": .audioSecond,
         "mistralai/voxtral-small-24b-2507-stt": .audioSecond,
+        "mistralai/voxtral-mini-transcribe-3-0": .audioSecond,
+        "mistralai/voxtral-small-transcribe-3-0": .audioSecond,
         "nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b": .audioSecond,
         "nvidia/parakeet-tdt-0.6b-v3": .audioSecond,
         "openai/whisper-1": .audioSecond,

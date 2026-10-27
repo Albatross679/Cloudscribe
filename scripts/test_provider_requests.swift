@@ -179,6 +179,8 @@ enum ProviderRequestTests {
             "mistralai/voxtral-mini-3b-2507",
             "mistralai/voxtral-mini-transcribe",
             "mistralai/voxtral-small-24b-2507-stt",
+            "mistralai/voxtral-mini-transcribe-3-0",
+            "mistralai/voxtral-small-transcribe-3-0",
             "nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b",
             "nvidia/parakeet-tdt-0.6b-v3",
             "openai/whisper-1",
