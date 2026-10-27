@@ -105,7 +105,7 @@ Other Hugging Face providers do serve Whisper: fal-ai, replicate, together, and 
 
 OpenRouter has had a dedicated speech-to-text endpoint since 2026-05-01, so audio does not go through chat completions as an `input_audio` content part. Requests go to `POST https://openrouter.ai/api/v1/audio/transcriptions` with the body `{"model", "input_audio": {"data": "<base64>", "format": "wav"}, "language"?}`. The response is `{"text", "usage": {"seconds", "total_tokens", "cost"}}`. A `multipart/form-data` form is accepted too for OpenAI SDK compatibility; JSON is used here because the body is then one comparable value that a unit test can assert on.
 
-`GET /api/v1/models?output_modalities=transcription` is the live catalogue. The picker offers the five established models plus 21 requested models:
+`GET /api/v1/models?output_modalities=transcription` is the live catalogue. The picker offers the five established models plus 23 requested models:
 
 | Key | Model | Why |
 |---|---|---|
@@ -131,6 +131,8 @@ OpenRouter has had a dedicated speech-to-text endpoint since 2026-05-01, so audi
 | `voxtral-mini-3b-2507` | `mistralai/voxtral-mini-3b-2507` | compact Mistral speech model |
 | `voxtral-mini-transcribe` | `mistralai/voxtral-mini-transcribe` | Mistral STT |
 | `voxtral-small-24b-2507-stt` | `mistralai/voxtral-small-24b-2507-stt` | larger Mistral STT |
+| `voxtral-mini-transcribe-3-0` | `mistralai/voxtral-mini-transcribe-3-0` | compact Mistral STT, third generation |
+| `voxtral-small-transcribe-3-0` | `mistralai/voxtral-small-transcribe-3-0` | Mistral's flagship STT, third generation |
 | `nemotron-3.5-asr-streaming-multilingual-0.6b` | `nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b` | NVIDIA multilingual ASR |
 | `parakeet-tdt-0.6b-v3` | `nvidia/parakeet-tdt-0.6b-v3` | NVIDIA multilingual STT |
 | `whisper-1` | `openai/whisper-1` | OpenAI hosted Whisper |

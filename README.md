@@ -11,7 +11,7 @@ It is a fork of [Starmel/OpenSuperWhisper](https://github.com/Starmel/OpenSuperW
 - **Local** holds **Parakeet** and **Whisper**, which run on this Mac. Opening the tab switches nothing until you pick one of them, and only then is its model downloaded.
 - **Cloudflare** calls Workers AI in your Cloudflare account directly. No Worker deploy is needed. This is the default cloud provider, and Nova-3 is its default model.
 - **Hugging Face** calls Inference Providers.
-- **OpenRouter** offers 26 transcription models and shows their current prices.
+- **OpenRouter** offers 28 transcription models and shows their current prices.
 
 A line under the bar and the first item of the menu bar menu name the engine dictation uses. A click that only brings an inactive Settings window forward never changes the engine. Each cloud provider keeps its own API key, and **Test Connection** checks it. A valid key does not guarantee access to every model.
 
@@ -69,7 +69,7 @@ Cost: Inference Providers bills per request against a free monthly credit allowa
 1. Create a key at [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys) and add credit.
 2. Paste it into the key field.
 
-Models include the existing `openai/whisper-large-v3-turbo` (default), `openai/whisper-large-v3`, `deepgram/nova-3`, `openai/gpt-4o-mini-transcribe`, and `openai/gpt-4o-transcribe`, plus `google/gemini-3.5-transcribe`, `fish-audio/transcribe-1-pro`, `assemblyai/universal-3-5-pro`, `meta/muse-voice-transcribe-1.0`, `microsoft/mai-transcribe-2`, `qwen/qwen3-asr-1.7b`, `qwen/qwen3-asr-0.6b`, `openai/gpt-transcribe`, `elevenlabs/scribe-v2`, `elevenlabs/scribe-v2-medical`, `assemblyai/universal-3-6-pro`, `fish-audio/transcribe-1`, `google/chirp-3`, `microsoft/mai-transcribe-1.5`, `mistralai/voxtral-mini-3b-2507`, `mistralai/voxtral-mini-transcribe`, `mistralai/voxtral-small-24b-2507-stt`, `nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b`, `nvidia/parakeet-tdt-0.6b-v3`, `openai/whisper-1`, and `x-ai/grok-stt-1.0`. The 21 newly added entries start in automatic language detection mode; the app does not claim model-specific language pinning or vocabulary boosting until it has a verified compatible wire option.
+Models include the existing `openai/whisper-large-v3-turbo` (default), `openai/whisper-large-v3`, `deepgram/nova-3`, `openai/gpt-4o-mini-transcribe`, and `openai/gpt-4o-transcribe`, plus `google/gemini-3.5-transcribe`, `fish-audio/transcribe-1-pro`, `assemblyai/universal-3-5-pro`, `meta/muse-voice-transcribe-1.0`, `microsoft/mai-transcribe-2`, `qwen/qwen3-asr-1.7b`, `qwen/qwen3-asr-0.6b`, `openai/gpt-transcribe`, `elevenlabs/scribe-v2`, `elevenlabs/scribe-v2-medical`, `assemblyai/universal-3-6-pro`, `fish-audio/transcribe-1`, `google/chirp-3`, `microsoft/mai-transcribe-1.5`, `mistralai/voxtral-mini-3b-2507`, `mistralai/voxtral-mini-transcribe`, `mistralai/voxtral-small-24b-2507-stt`, `nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b`, `nvidia/parakeet-tdt-0.6b-v3`, `openai/whisper-1`, `x-ai/grok-stt-1.0`, `mistralai/voxtral-mini-transcribe-3-0`, and `mistralai/voxtral-small-transcribe-3-0`. The 23 entries after the first five start in automatic language detection mode; the app does not claim model-specific language pinning or vocabulary boosting until it has a verified compatible wire option.
 
 Cost: pay per request with no subscription, at each upstream provider's rate plus OpenRouter's fee. The picker shows each model's current OpenRouter list price, and **Compare all OpenRouter prices** under it charts every model, per audio minute or per 1M tokens. Prices are fetched without a key and cached, so they still show offline, marked possibly outdated. Every response reports its own `usage.cost`, and the [activity page](https://openrouter.ai/activity) is the authority. Recordings are capped at 25 MB and upstream providers time out after about 60 seconds.
 
@@ -77,7 +77,7 @@ Cost: pay per request with no subscription, at each upstream provider's rate plu
 
 | | Cloudflare | Hugging Face | OpenRouter |
 |---|---|---|---|
-| Language pinning | yes, per model | **no**, the speech pipeline rejects a language parameter | per model; 21 new entries are auto-only |
+| Language pinning | yes, per model | **no**, the speech pipeline rejects a language parameter | per model; 23 newer entries are auto-only |
 | Vocabulary boosting | yes, on Nova-3 and Whisper turbo | **no**, the pipeline takes no decoder prompt | model/provider-specific; this app does not send optional keyterm routes |
 | Audio speed | yes | yes | yes |
 | LLM cleanup | yes, on Workers AI | yes, on the HF router | yes, on OpenRouter |

@@ -1,7 +1,8 @@
 import Foundation
 
 /// Offline. Parses a saved copy of GET /api/v1/models?output_modalities=transcription
-/// (fetched 2026-10-18) and drives the cache with stubbed fetches; no network.
+/// (fetched 2026-10-18, with the two Voxtral Transcribe 3 entries added from a
+/// 2026-10-27 fetch) and drives the cache with stubbed fetches; no network.
 @main enum OpenRouterPricingTests {
     static var failures = 0
     static func check(_ name: String, _ ok: Bool) {
@@ -14,7 +15,7 @@ import Foundation
         let fixture = try Data(contentsOf: fixtureURL)
         let pricing = try OpenRouterPricing.parse(fixture)
 
-        check("fixture lists 26 transcription models", pricing.count == 26)
+        check("fixture lists 28 transcription models", pricing.count == 28)
         let ids = OpenRouterRequest.catalog.map(\.id)
         check("every picker model has a price in the fixture", ids.allSatisfy { pricing[$0] != nil })
         check("every picker model has a published unit", ids.allSatisfy { OpenRouterPricing.units[$0] != nil })
@@ -31,6 +32,8 @@ import Foundation
         check("Whisper turbo short label", price("openai/whisper-large-v3-turbo").shortLabel == "$0.0002/min")
         check("Scribe v2 discounted rate", price("elevenlabs/scribe-v2").shortLabel == "$0.00183/min")
         check("Chirp 3", price("google/chirp-3").shortLabel == "$0.016/min")
+        check("Voxtral Mini Transcribe 3", price("mistralai/voxtral-mini-transcribe-3-0").shortLabel == "$0.0035/min")
+        check("Voxtral Small Transcribe 3", price("mistralai/voxtral-small-transcribe-3-0").shortLabel == "$0.004/min")
 
         // Per audio hour: divide by 60.
         if case .perAudioMinute(let usd) = price("microsoft/mai-transcribe-2") { check("MAI-Transcribe 2 per hour becomes per minute", near(usd, 0.1 / 60)) }

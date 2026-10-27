@@ -1015,6 +1015,82 @@
     "is_moderated": true,
     "max_completion_tokens": 115200
    }
+  },
+  {
+   "architecture": {
+    "input_modalities": [
+     "audio"
+    ],
+    "instruct_type": null,
+    "modality": "audio->transcription",
+    "output_modalities": [
+     "transcription"
+    ],
+    "tokenizer": "Mistral"
+   },
+   "canonical_slug": "mistralai/voxtral-small-transcribe-3-0-20261020",
+   "context_length": 65536,
+   "created": 1792512812,
+   "default_parameters": {},
+   "description": "Voxtral Small Transcribe 3 is Mistral's flagship speech-to-text model. It takes audio input and returns a transcript with timestamps and speaker diarization, and supports context biasing for domain-specific vocabulary. Suited...",
+   "expiration_date": null,
+   "hugging_face_id": null,
+   "id": "mistralai/voxtral-small-transcribe-3-0",
+   "knowledge_cutoff": null,
+   "links": {
+    "details": "/api/v1/models/mistralai/voxtral-small-transcribe-3-0-20261020/endpoints"
+   },
+   "name": "Mistral: Voxtral Small Transcribe 3",
+   "per_request_limits": null,
+   "pricing": {
+    "completion": "0",
+    "prompt": "0.0000666667"
+   },
+   "supported_parameters": [],
+   "supported_voices": null,
+   "top_provider": {
+    "context_length": 65536,
+    "is_moderated": false,
+    "max_completion_tokens": 52428
+   }
+  },
+  {
+   "architecture": {
+    "input_modalities": [
+     "audio"
+    ],
+    "instruct_type": null,
+    "modality": "audio->transcription",
+    "output_modalities": [
+     "transcription"
+    ],
+    "tokenizer": "Mistral"
+   },
+   "canonical_slug": "mistralai/voxtral-mini-transcribe-3-0-20261020",
+   "context_length": 65536,
+   "created": 1792512796,
+   "default_parameters": {},
+   "description": "Voxtral Mini Transcribe 3 is Mistral's compact speech-to-text model. It takes audio input and returns a transcript with timestamps and speaker diarization. It also supports context biasing for domain terms....",
+   "expiration_date": null,
+   "hugging_face_id": null,
+   "id": "mistralai/voxtral-mini-transcribe-3-0",
+   "knowledge_cutoff": null,
+   "links": {
+    "details": "/api/v1/models/mistralai/voxtral-mini-transcribe-3-0-20261020/endpoints"
+   },
+   "name": "Mistral: Voxtral Mini Transcribe 3",
+   "per_request_limits": null,
+   "pricing": {
+    "completion": "0",
+    "prompt": "0.0000583333"
+   },
+   "supported_parameters": [],
+   "supported_voices": null,
+   "top_provider": {
+    "context_length": 65536,
+    "is_moderated": false,
+    "max_completion_tokens": 52428
+   }
   }
  ],
  "links": {

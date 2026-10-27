@@ -8,3 +8,4 @@ Changes since 0.1.0:
 - Add ElevenLabs Scribe and the other missing OpenRouter transcription models (#5).
 - Show current OpenRouter transcription prices in settings, with comparison charts (#6).
 - Stop focus clicks from switching the engine, and group Parakeet and Whisper under one Local tab (#7).
+- Add Mistral Voxtral Mini Transcribe 3 and Voxtral Small Transcribe 3 to the OpenRouter models.
