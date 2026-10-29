@@ -39,7 +39,7 @@ with tempfile.TemporaryDirectory(prefix="osw-patch-tests-") as directory:
         patcher.patch_failure_paths, patcher.patch_content_view, patcher.patch_usage_metrics,
         patcher.patch_openrouter_prices, patcher.patch_local_engine_tab,
         patcher.patch_dictation_deadline, patcher.patch_service_concurrency_warnings,
-        patcher.patch_theme,
+        patcher.patch_theme, patcher.patch_transcribing_timer,
     ]
     def snapshot():
         return {str(p.relative_to(patcher.APP)): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -81,6 +81,9 @@ with tempfile.TemporaryDirectory(prefix="osw-patch-tests-") as directory:
     indicator = (patcher.APP / "Indicator/IndicatorWindow.swift").read_text()
     assert 'let deadline = ContinuousClock.now + TranscriptionService.dictationDeadline' in indicator
     assert 'metricID: metricID, deadline: deadline)' in indicator
+    assert indicator.count('startTranscribingClock(deadline: deadline)') == 1
+    assert 'showAutoDismissingMessage(.timedOut)' in indicator
+    assert (patcher.APP / 'Indicator/TranscribingClock.swift').read_bytes() == (ROOT / 'src/client/TranscribingClock.swift').read_bytes()
     # Manual transcription keeps the per-request timeouts.
     for name in ("ContentView.swift", "TranscriptionQueue.swift"):
         assert 'deadline:' not in (patcher.APP / name).read_text(), f"{name} must not pass the dictation deadline"
