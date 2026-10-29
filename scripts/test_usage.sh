@@ -34,6 +34,12 @@ if [[ -f "$ROOT/OpenSuperWhisper/TranscriptionService.swift" ]]; then
   swiftc -O -parse-as-library -o "$OUT/test_service" \
     "$ROOT/src/client/UsageMetrics.swift" "$OUT/TranscriptionService.swift" "$ROOT/scripts/test_usage_service.swift"
   "$OUT/test_service" "$OUT"
+  swiftc -O -parse-as-library -o "$OUT/test_deadline" \
+    "$ROOT/src/client/UsageMetrics.swift" "$ROOT/src/client/CloudProvider.swift" \
+    "$ROOT/src/client/CloudflareDirectRequest.swift" "$ROOT/src/client/HuggingFaceRequest.swift" \
+    "$ROOT/src/client/OpenRouterRequest.swift" "$OUT/CloudflareClient.swift" \
+    "$OUT/TranscriptionService.swift" "$ROOT/scripts/test_dictation_deadline.swift"
+  "$OUT/test_deadline" "$OUT"
   python3 "$ROOT/scripts/test_patch_osw.py"
 else
   echo 'Service integration and patch regeneration skipped: run patch_osw.py first.'
