@@ -159,6 +159,7 @@ class IndicatorViewModel: ObservableObject {
         }
         
         state = .decoding
+        let deadline = ContinuousClock.now + TranscriptionService.dictationDeadline
         
         Task { [weak self] in
             guard let self = self else { return }
@@ -168,7 +169,7 @@ class IndicatorViewModel: ObservableObject {
                 do {
                     print("start decoding...")
                     let duration = await AudioUtil.audioDuration(url: tempURL)
-                    let text = try await transcriptionService.transcribeAudio(url: tempURL, settings: Settings(), metricID: metricID)
+                    let text = try await transcriptionService.transcribeAudio(url: tempURL, settings: Settings(), metricID: metricID, deadline: deadline)
                     
                     if text.isEmpty {
                         try? FileManager.default.removeItem(at: tempURL)

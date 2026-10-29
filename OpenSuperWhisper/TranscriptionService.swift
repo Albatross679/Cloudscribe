@@ -1,8 +1,23 @@
 import Foundation
 
+/// Thrown when hotkey dictation runs past `TranscriptionService.dictationDeadline`.
+struct DictationDeadlineExceeded: LocalizedError {
+    var errorDescription: String? {
+        "Transcription took longer than \(Int(TranscriptionService.dictationDeadline.components.seconds)) seconds and was stopped. Transcribe it again from history."
+    }
+}
+
 @MainActor
 class TranscriptionService: ObservableObject {
     static let shared = TranscriptionService()
+
+    /// Total time hotkey dictation may spend transcribing, from key release to
+    /// text, including any cleanup request. A provider that never answers would
+    /// otherwise keep the indicator up and the service busy for minutes, since
+    /// `URLRequest.timeoutInterval` only measures idle time between bytes.
+    /// Manual transcription from history, the queue, and file imports passes
+    /// no deadline and keeps the per-request timeouts.
+    nonisolated static let dictationDeadline: Duration = .seconds(8)
     
     @Published private(set) var isTranscribing = false
     @Published private(set) var transcribedText = ""
@@ -29,6 +44,12 @@ class TranscriptionService: ObservableObject {
         self.usageMetricsStore = metricsStore
         loadEngine()
     }
+
+    /// Uses `engine` as loaded instead of the one the preferences select.
+    init(metricsStore: UsageMetricsStore, engine: TranscriptionEngine) {
+        self.usageMetricsStore = metricsStore
+        self.currentEngine = engine
+    }
     
     func cancelTranscription() {
         isCancelled = true
@@ -53,11 +74,11 @@ class TranscriptionService: ObservableObject {
             let engine: TranscriptionEngine?
             
             if selectedEngine == "fluidaudio" {
-                engine = await FluidAudioEngine()
+                engine = FluidAudioEngine()
             } else if selectedEngine == "cloudflare" {
-                engine = await CloudflareEngine()
+                engine = CloudflareEngine()
             } else {
-                engine = await WhisperEngine()
+                engine = WhisperEngine()
             }
             
             do {
@@ -89,18 +110,31 @@ class TranscriptionService: ObservableObject {
         }
     }
     
-    func transcribeAudio(url: URL, settings: Settings, metricID: UUID = UUID(), recordedAt: Date? = nil) async throws -> String {
+    /// With a `deadline`, throws `DictationDeadlineExceeded` once it passes,
+    /// cancels the engine work, and returns without waiting for the engine to
+    /// stop, so the service is free for the next call right away.
+    func transcribeAudio(url: URL, settings: Settings, metricID: UUID = UUID(), recordedAt: Date? = nil,
+                         deadline: ContinuousClock.Instant? = nil) async throws -> String {
         // Reserve the whole call before the asynchronous original-duration read.
         // Otherwise indicator and queue calls can both pass the engine busy check.
-        while usageServiceBusy { try await Task.sleep(nanoseconds: 1_000_000) }
+        while usageServiceBusy {
+            if let deadline, ContinuousClock.now >= deadline { throw DictationDeadlineExceeded() }
+            try await Task.sleep(nanoseconds: 1_000_000)
+        }
         usageServiceBusy = true
         defer { usageServiceBusy = false }
 
         // Serialize access to the engine: a whisper context must not process
         // two transcriptions concurrently (indicator flow and queue flow can
-        // both reach this point due to async busy checks).
+        // both reach this point due to async busy checks). A task left behind
+        // by an expired deadline is drained here too, before the engine is reused.
         while let existing = transcriptionTask {
-            _ = try? await existing.task.value
+            if let deadline {
+                _ = try? await Self.value(of: existing.task, before: deadline)
+                if ContinuousClock.now >= deadline { throw DictationDeadlineExceeded() }
+            } else {
+                _ = try? await existing.task.value
+            }
             if transcriptionTask === existing {
                 transcriptionTask = nil
             }
@@ -126,15 +160,19 @@ class TranscriptionService: ObservableObject {
         currentSegment = ""
         isCancelled = false
         
+        var ownTask: TranscriptionTaskBox?
+        var expired = false
         defer {
-            Task { @MainActor in
-                self.isTranscribing = false
-                self.isConverting = false
-                self.currentSegment = ""
-                if !self.isCancelled {
-                    self.progress = 1.0
-                }
-                self.transcriptionTask = nil
+            isTranscribing = false
+            isConverting = false
+            currentSegment = ""
+            if !isCancelled {
+                progress = 1.0
+            }
+            // An expired task may still be unwinding inside the engine, so it
+            // stays registered for the next call to drain.
+            if !expired, let ownTask, transcriptionTask === ownTask {
+                transcriptionTask = nil
             }
         }
         
@@ -166,10 +204,12 @@ class TranscriptionService: ObservableObject {
         }
         
         let task = Task.detached(priority: .userInitiated) { [weak self] in
+            // A let, so the main-actor closures below capture no mutable var.
+            let service = self
             try Task.checkCancellation()
             
             let cancelled = await MainActor.run {
-                guard let self = self else { return true }
+                guard let self = service else { return true }
                 return self.isCancelled
             }
             
@@ -185,12 +225,12 @@ class TranscriptionService: ObservableObject {
             try Task.checkCancellation()
             
             let finalCancelled = await MainActor.run {
-                guard let self = self else { return true }
+                guard let self = service else { return true }
                 return self.isCancelled
             }
             
             await MainActor.run {
-                guard let self = self, !self.isCancelled else { return }
+                guard let self = service, !self.isCancelled else { return }
                 self.transcribedText = result
                 self.progress = 1.0
             }
@@ -202,17 +242,70 @@ class TranscriptionService: ObservableObject {
             return result
         }
         
-        transcriptionTask = TranscriptionTaskBox(task)
+        let box = TranscriptionTaskBox(task)
+        ownTask = box
+        transcriptionTask = box
         
         do {
-            let result = try await task.value
+            let result: String
+            if let deadline {
+                result = try await Self.value(of: task, before: deadline)
+            } else {
+                result = try await task.value
+            }
             metricOutcome = "success"
             return result
+        } catch let error as DictationDeadlineExceeded {
+            metricOutcome = "deadlineExceeded"
+            expired = true
+            engine.cancelTranscription()
+            task.cancel()
+            throw error
         } catch is CancellationError {
             metricOutcome = "cancelled"
             isCancelled = true
             throw TranscriptionError.processingFailed
         }
+    }
+
+    /// The task's value, or `DictationDeadlineExceeded` once `deadline` passes,
+    /// whichever comes first. Unlike a task group this does not wait for the
+    /// task to finish after the deadline wins.
+    private static func value(of task: Task<String, Error>, before deadline: ContinuousClock.Instant) async throws -> String {
+        let race = DeadlineRace()
+        return try await withCheckedThrowingContinuation { continuation in
+            race.start(continuation)
+            let timer = Task {
+                try? await Task.sleep(until: deadline, clock: .continuous)
+                race.finish(.failure(DictationDeadlineExceeded()))
+            }
+            Task {
+                do {
+                    race.finish(.success(try await task.value))
+                } catch {
+                    race.finish(.failure(error))
+                }
+                timer.cancel()
+            }
+        }
+    }
+}
+
+/// Resumes a continuation with whichever result arrives first.
+private final class DeadlineRace: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<String, Error>?
+
+    func start(_ continuation: CheckedContinuation<String, Error>) {
+        lock.withLock { self.continuation = continuation }
+    }
+
+    func finish(_ result: Result<String, Error>) {
+        let pending: CheckedContinuation<String, Error>? = lock.withLock {
+            defer { continuation = nil }
+            return continuation
+        }
+        pending?.resume(with: result)
     }
 }
 
