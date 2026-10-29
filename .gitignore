@@ -127,7 +127,7 @@ dev_config.json
 /issues/
 agent/.venv/
 agent/logs/
-# OSW Cloud local outputs and secrets
+# Cloudscribe local outputs and secrets
 node_modules/
 runs/
 .wrangler/

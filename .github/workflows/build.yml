@@ -37,7 +37,7 @@ jobs:
           git diff --exit-code
           npm test
           scripts/test_shortcuts.sh
-      - name: Build OSW Cloud candidate without installation
+      - name: Build Cloudscribe candidate without installation
         run: scripts/build_app.sh
       - name: Verify candidate signature
-        run: codesign --verify --deep --strict build/Build/Products/Release/OpenSuperWhisper.app
+        run: codesign --verify --deep --strict build/Build/Products/Release/Cloudscribe.app
