@@ -351,13 +351,11 @@ struct OnboardingView: View {
                     Text("Welcome to")
                         .font(.title2)
                         .fontWeight(.medium)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Theme.mutedText)
                     
                     Text("OpenSuperWhisper")
                         .font(.system(size: 32, weight: .bold))
-                        .foregroundStyle(
-                            .white
-                        )
+                        .foregroundStyle(Theme.text)
                 }
                 .padding(.bottom, 8)
                 
@@ -379,22 +377,12 @@ struct OnboardingView: View {
                         Text("Use Asian Autocorrect")
                             .font(.caption)
                     }
-                    .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                    .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                 }
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                LinearGradient(
-                    colors: [
-                        Color.white.opacity(0.05),
-                        Color.white.opacity(0.03),
-                        Color.clear
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
+            .background(Theme.panel)
             
             Divider()
             
@@ -409,7 +397,7 @@ struct OnboardingView: View {
                         
                         Text("Choose how to trigger recording")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.mutedText)
                         
                         if let layoutInfo = keyboardLayoutInfo {
                             OnboardingKeyboardView(selectedShortcut: viewModel.selectedShortcut, layoutInfo: layoutInfo)
@@ -436,12 +424,12 @@ struct OnboardingView: View {
                         if viewModel.selectedShortcut == .rightOption {
                             Text("⚠️ Single modifier key mode requires Input Monitoring permission (macOS needs it to detect modifier keys globally). Only modifier key events are monitored — no regular keystrokes.")
                                 .font(.caption2)
-                                .foregroundColor(.orange)
+                                .foregroundColor(Theme.amber)
                         }
 
                         Text("You can change this later in Settings")
                             .font(.caption2)
-                            .foregroundColor(Color(.tertiaryLabelColor))
+                            .foregroundColor(Theme.mutedText)
                     }
                     
                     // Model Selection
@@ -452,7 +440,7 @@ struct OnboardingView: View {
                         
                         Text("Download a model to get started")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.mutedText)
                         
                         VStack(spacing: 8) {
                             ForEach($viewModel.unifiedModels) { $model in
@@ -487,22 +475,8 @@ struct OnboardingView: View {
             .padding(16)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            ZStack {
-                Color(.windowBackgroundColor)
-                
-                // Subtle gradient overlay
-                LinearGradient(
-                    colors: [
-                        Color.blue.opacity(0.02),
-                        Color.clear,
-                        Color.purple.opacity(0.02)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            }
-        )
+        .foregroundStyle(Theme.text)
+        .background(Theme.background)
         .alert("Download Error", isPresented: $showError) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -540,14 +514,14 @@ struct OnboardingUnifiedModelItemView: View {
                        let owner = huggingFaceOwner(fromPageURL: pageURL) {
                         Link(owner, destination: pageURL)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.mutedText)
                             .help("View on Hugging Face")
                     }
                 }
                 
                 Text(model.description)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
 
                 if viewModel.isDownloading && viewModel.downloadingModelName == model.name {
                     ProgressView(value: model.downloadProgress)
@@ -568,7 +542,7 @@ struct OnboardingUnifiedModelItemView: View {
             } else if model.isDownloaded {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(Theme.green)
                         .imageScale(.large)
                 } else {
                     Button(action: {
@@ -602,12 +576,11 @@ struct OnboardingUnifiedModelItemView: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(isSelected ? Color(.controlBackgroundColor).opacity(0.8) : Color(.controlBackgroundColor).opacity(0.5))
-                .shadow(color: isSelected ? Color.blue.opacity(0.2) : Color.black.opacity(0.05), radius: isSelected ? 8 : 4, x: 0, y: 2)
+                .fill(Theme.panel)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(isSelected ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1.5)
+                .stroke(isSelected ? Theme.accent : Theme.border, lineWidth: 1)
         )
         .contentShape(Rectangle())
         .onTapGesture {
@@ -637,13 +610,13 @@ private struct KeyCap: View {
             .frame(width: w, height: h)
             .background(
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(highlighted ? Color.accentColor.opacity(0.35) : Color(.controlBackgroundColor).opacity(0.5))
+                    .fill(highlighted ? Theme.accent.opacity(0.3) : Theme.panel)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 4)
-                    .stroke(highlighted ? Color.accentColor.opacity(0.7) : Color.white.opacity(0.08), lineWidth: 1)
+                    .stroke(highlighted ? Theme.accent : Theme.border, lineWidth: 1)
             )
-            .foregroundColor(highlighted ? .white : .secondary)
+            .foregroundColor(highlighted ? Theme.text : Theme.mutedText)
     }
 }
 
@@ -759,7 +732,7 @@ struct OnboardingKeyboardView: View {
         .frame(height: heightForWidth(450 - 24))
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(.controlBackgroundColor).opacity(0.3))
+                .fill(Theme.panel)
         )
         .animation(.easeInOut(duration: 0.2), value: selectedShortcut)
     }
@@ -785,19 +758,18 @@ struct OnboardingShortcutCard: View {
                 
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .padding(.horizontal, 8)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected ? Color(.controlBackgroundColor).opacity(0.8) : Color(.controlBackgroundColor).opacity(0.5))
-                    .shadow(color: isSelected ? Color.blue.opacity(0.2) : Color.black.opacity(0.05), radius: isSelected ? 8 : 4, x: 0, y: 2)
+                    .fill(Theme.panel)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(isSelected ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1.5)
+                    .stroke(isSelected ? Theme.accent : Theme.border, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)

@@ -9,6 +9,7 @@ trap 'rm -rf "$OUT"' EXIT
 swiftc -parse-as-library -o "$OUT/test_engine_choice" \
   "$ROOT/src/client/UsageMetrics.swift" \
   "$ROOT/src/client/CloudProvider.swift" \
+  "$ROOT/src/client/Theme.swift" \
   "$ROOT/src/client/EngineChoiceSelector.swift" \
   "$ROOT/scripts/test_engine_choice.swift"
 "$OUT/test_engine_choice"

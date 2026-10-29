@@ -12,6 +12,7 @@ enum UsageDashboardWindow {
             window.title = "Dictation usage"
             window.contentMinSize = NSSize(width: 440, height: 500)
             window.contentView = NSHostingView(rootView: UsageDashboard(store: .shared))
+            window.backgroundColor = Theme.NSColors.background
             window.isReleasedWhenClosed = false
             window.center()
             controller = NSWindowController(window: window)
@@ -26,7 +27,7 @@ struct UsageDashboardButton: View {
         Button { UsageDashboardWindow.show() } label: {
             Label("Dictation usage", systemImage: "chart.bar.xaxis")
         }
-        .buttonStyle(.link)
+        .buttonStyle(.themeLink)
         .font(.caption)
         .help("Dictation counts, local recording minutes and request costs for every engine")
     }
@@ -110,8 +111,8 @@ struct UsageDashboard: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Dictation usage").font(.title2.weight(.semibold))
                 controls
-                if let error { Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.orange) }
-                if bounds.0 >= bounds.1 { Text("Choose an end date on or after the start date.").foregroundStyle(.orange) }
+                if let error { Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Theme.orangeRed) }
+                if bounds.0 >= bounds.1 { Text("Choose an end date on or after the start date.").foregroundStyle(Theme.amber) }
                 if archive.dictations.isEmpty && archive.requests.isEmpty {
                     ContentUnavailableView("No tracked dictations yet", systemImage: "chart.bar",
                                            description: Text("New dictations from every engine appear here. Existing recordings and Worker history are not imported as cross-provider metrics."))
@@ -120,10 +121,11 @@ struct UsageDashboard: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(String(format: "%.1f original minutes · %d dictations", buckets.reduce(0) { $0 + $1.minutes }, buckets.reduce(0) { $0 + $1.dictations }))
                         Text("Reported " + money(buckets.reduce(0) { $0 + $1.actualUSD }) + " · Estimated " + money(buckets.reduce(0) { $0 + $1.estimatedUSD }))
+                            .foregroundStyle(Theme.green)
                         Text("\(buckets.reduce(0) { $0 + $1.unknownCosts }) requests with unknown cost · \(buckets.reduce(0) { $0 + $1.requests }) request attempts")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.mutedText)
                         if buckets.contains(where: { $0.unknownDurations > 0 }) {
-                            Text("Some original durations are unavailable; minutes are incomplete.").foregroundStyle(.orange)
+                            Text("Some original durations are unavailable; minutes are incomplete.").foregroundStyle(Theme.amber)
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(4)
                 }
@@ -131,10 +133,13 @@ struct UsageDashboard: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Chart(buckets) { bucket in
                             BarMark(x: .value("Calendar period", bucket.start, unit: period.component, calendar: calendar),
-                                    y: .value("Dictations", bucket.dictations))
-                                .foregroundStyle(Color.accentColor)
+                                    y: .value("Dictations", bucket.dictations), stacking: .unstacked)
+                                .foregroundStyle(Theme.cyan)
                                 .accessibilityLabel(bucket.start.formatted(date: .abbreviated, time: .omitted))
                                 .accessibilityValue(UsageCountFormat.label(bucket.dictations))
+                            BarMark(x: .value("Calendar period", bucket.start, unit: period.component, calendar: calendar),
+                                    y: .value("Dictations", bucket.dictations), stacking: .unstacked)
+                                .themeBarFill(Theme.cyan)
                         }
                         .chartYScale(domain: 0...max(1, buckets.map(\.dictations).max() ?? 0))
                         .chartYAxis {
@@ -149,13 +154,15 @@ struct UsageDashboard: View {
                         .frame(height: 165)
                         .accessibilityLabel("Dictation count by \(period.rawValue.lowercased()) calendar period")
                         Text("One count per tracked dictation, including failures and local engines. Cleanup and retries do not add counts.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(Theme.mutedText)
                     }.padding(8)
                 }
                 GroupBox("Original recording minutes") {
                     Chart(buckets) { bucket in
-                        BarMark(x: .value("Calendar period", bucket.start, unit: period.component, calendar: calendar), y: .value("Minutes", bucket.minutes))
-                            .foregroundStyle(Color.accentColor)
+                        BarMark(x: .value("Calendar period", bucket.start, unit: period.component, calendar: calendar), y: .value("Minutes", bucket.minutes), stacking: .unstacked)
+                            .foregroundStyle(Theme.violet)
+                        BarMark(x: .value("Calendar period", bucket.start, unit: period.component, calendar: calendar), y: .value("Minutes", bucket.minutes), stacking: .unstacked)
+                            .themeBarFill(Theme.violet)
                     }
                     .modifier(UsageCalendarAxis(buckets: buckets, period: period, calendar: calendar))
                     .chartYAxisLabel("Minutes")
@@ -171,38 +178,47 @@ struct UsageDashboard: View {
                                 BarMark(x: .value("Calendar period", bucket.start, unit: period.component, calendar: calendar), y: .value("USD", bucket.actualUSD), stacking: .unstacked)
                                     .foregroundStyle(by: .value("Cost type", "Provider reported"))
                                     .position(by: .value("Cost type", "Provider reported"))
+                                BarMark(x: .value("Calendar period", bucket.start, unit: period.component, calendar: calendar), y: .value("USD", bucket.actualUSD), stacking: .unstacked)
+                                    .position(by: .value("Cost type", "Provider reported"))
+                                    .themeBarFill(Theme.green)
                                 BarMark(x: .value("Calendar period", bucket.start, unit: period.component, calendar: calendar), y: .value("USD", bucket.estimatedUSD), stacking: .unstacked)
                                     .foregroundStyle(by: .value("Cost type", "Estimated list rate"))
                                     .position(by: .value("Cost type", "Estimated list rate"))
+                                BarMark(x: .value("Calendar period", bucket.start, unit: period.component, calendar: calendar), y: .value("USD", bucket.estimatedUSD), stacking: .unstacked)
+                                    .position(by: .value("Cost type", "Estimated list rate"))
+                                    .themeBarFill(Theme.amber)
                             } else {
                                 // No categorical slot for an absent series. Values and heights are unchanged.
                                 BarMark(x: .value("Calendar period", bucket.start, unit: period.component, calendar: calendar),
                                         y: .value("USD", bucket.actualUSD + bucket.estimatedUSD), stacking: .unstacked)
                                     .foregroundStyle(by: .value("Cost type", hasEstimates ? "Estimated list rate" : "Provider reported"))
+                                BarMark(x: .value("Calendar period", bucket.start, unit: period.component, calendar: calendar),
+                                        y: .value("USD", bucket.actualUSD + bucket.estimatedUSD), stacking: .unstacked)
+                                    .themeBarFill(hasEstimates ? Theme.amber : Theme.green)
                             }
                         }
-                        .chartForegroundStyleScale(["Provider reported": Color.accentColor, "Estimated list rate": Color.orange])
+                        .chartForegroundStyleScale(["Provider reported": Theme.green, "Estimated list rate": Theme.amber])
                         .modifier(UsageCalendarAxis(buckets: buckets, period: period, calendar: calendar))
                         .chartYAxisLabel("USD").frame(height: 165)
                         costReadout
                         Text("Unknown costs are excluded from dollar bars, not treated as free. Estimates are gross list-rate values before account credits or free allowances.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(Theme.mutedText)
                     }.padding(8)
                 }
                 calendarTotals
                 DisclosureGroup("\(period.rawValue) totals for selected range") {
                     VStack(spacing: 8) {
-                        HStack { Text("Period / dictations / minutes"); Spacer(); Text("Reported / estimated / unknown") }.font(.caption).foregroundStyle(.secondary)
+                        HStack { Text("Period / dictations / minutes"); Spacer(); Text("Reported / estimated / unknown") }.font(.caption).foregroundStyle(Theme.mutedText)
                         ForEach(buckets) { bucket in
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(bucket.start, format: .dateTime.year().month().day())
-                                    Text(UsageCountFormat.label(bucket.dictations) + " · " + String(format: "%.1f min", bucket.minutes)).foregroundStyle(.secondary)
+                                    Text(UsageCountFormat.label(bucket.dictations) + " · " + String(format: "%.1f min", bucket.minutes)).foregroundStyle(Theme.mutedText)
                                 }
                                 Spacer()
                                 VStack(alignment: .trailing) {
                                     Text(money(bucket.actualUSD) + " / " + money(bucket.estimatedUSD))
-                                    Text("\(bucket.unknownCosts) unknown").foregroundStyle(.secondary)
+                                    Text("\(bucket.unknownCosts) unknown").foregroundStyle(Theme.mutedText)
                                 }
                             }.font(.caption)
                             Divider()
@@ -211,16 +227,16 @@ struct UsageDashboard: View {
                 }
                 DisclosureGroup("Request attempts, cleanup and retries") {
                     VStack(alignment: .leading, spacing: 10) {
-                        if requests.isEmpty { Text("No cloud request attempts in this range. Local inference has no cloud API charge.").foregroundStyle(.secondary) }
+                        if requests.isEmpty { Text("No cloud request attempts in this range. Local inference has no cloud API charge.").foregroundStyle(Theme.mutedText) }
                         ForEach(requests.prefix(200)) { request in
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(request.startedAt, format: .dateTime.year().month().day().hour().minute().second())
                                 Text("\(request.provider) · \(request.phase) · \(outcomeLabel(request.outcome))")
-                                Text(request.model).foregroundStyle(.secondary).textSelection(.enabled)
+                                Text(request.model).foregroundStyle(Theme.mutedText).textSelection(.enabled)
                                 Text(costDescription(request.cost)).help(request.cost.source ?? "Provider did not supply a usable charge; no verified estimate is available.")
-                                if let source = request.cost.source { Text(source).font(.caption2).foregroundStyle(.secondary).textSelection(.enabled) }
+                                if let source = request.cost.source { Text(source).font(.caption2).foregroundStyle(Theme.mutedText).textSelection(.enabled) }
                                 let runs = archive.runs.filter { $0.dictationID == request.dictationID }.sorted { $0.startedAt < $1.startedAt }
-                                if let index = runs.firstIndex(where: { $0.id == request.runID }) { Text("Dictation run \(index + 1)").foregroundStyle(.secondary) }
+                                if let index = runs.firstIndex(where: { $0.id == request.runID }) { Text("Dictation run \(index + 1)").foregroundStyle(Theme.mutedText) }
                             }.font(.caption)
                             Divider()
                         }
@@ -237,8 +253,8 @@ struct UsageDashboard: View {
                                 Text(dictation.recordedAt, format: .dateTime.year().month().day().hour().minute())
                                 Text("\(dictation.provider) · \(dictation.model)")
                                 Text(dictation.originalSeconds.map { String(format: "%.1f original seconds", $0) } ?? "Original duration unavailable")
-                                Text("\(runs.count) runs · \(outcomeLabel(runs.last?.outcome ?? "unknown"))").foregroundStyle(.secondary)
-                                if dictation.provider == "parakeet" || dictation.provider == "whisper" { Text("Local inference: no cloud API charge").foregroundStyle(.secondary) }
+                                Text("\(runs.count) runs · \(outcomeLabel(runs.last?.outcome ?? "unknown"))").foregroundStyle(Theme.mutedText)
+                                if dictation.provider == "parakeet" || dictation.provider == "whisper" { Text("Local inference: no cloud API charge").foregroundStyle(Theme.mutedText) }
                             }.font(.caption)
                             Divider()
                         }
@@ -246,12 +262,15 @@ struct UsageDashboard: View {
                     }.padding(.top, 8)
                 }
                 Text("Tracking started \(archive.trackingStartedAt.formatted(date: .abbreviated, time: .shortened)). Calendar timezone: \(calendar.timeZone.identifier). Minutes use the original recording and its first tracked engine, once per dictation, including failures. Costs use each request's provider and send date, including cleanup and retries. Local inference has no cloud API charge. Worker pipelines may hide internal execution when a response is missing.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(Theme.mutedText)
                 Text("Metrics stay on this Mac. No transcript text, recording bytes or credentials are stored in the usage file. Existing history and settings are unchanged.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(Theme.mutedText)
             }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color(nsColor: .windowBackgroundColor))
+        .foregroundStyle(Theme.text)
+        .tint(Theme.accent)
+        .groupBoxStyle(ThemeGroupBoxStyle())
+        .background(Theme.background)
         .onAppear(perform: refresh)
         .onReceive(NotificationCenter.default.publisher(for: UsageMetricsStore.changed)) { _ in refresh() }
     }
@@ -268,11 +287,13 @@ struct UsageDashboard: View {
                     }
                 }
                 Text("Reported " + UsageCostPresentation.exact(selected.actualUSD) + " USD")
+                    .foregroundStyle(Theme.green)
                 Text("Estimated " + UsageCostPresentation.exact(selected.estimatedUSD) + " USD")
+                    .foregroundStyle(Theme.amber)
                 Text("\(selected.unknownCosts) requests with unknown cost, excluded from dollar amounts")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.mutedText)
             } else {
-                Text("No buckets in this range.").foregroundStyle(.secondary)
+                Text("No buckets in this range.").foregroundStyle(Theme.mutedText)
             }
         }.font(.caption).textSelection(.enabled)
     }
@@ -289,7 +310,7 @@ struct UsageDashboard: View {
                         let countAndMinutes = UsageCountFormat.label(value.dictations) + " · " + String(format: "%.1f min", value.minutes)
                         let costs = money(value.actualUSD) + " reported · " + money(value.estimatedUSD) + " estimated"
                         Text("\(countAndMinutes) · \(costs) · \(value.unknownCosts) unknown")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(Theme.mutedText)
                     }
                 }
             }.frame(maxWidth: .infinity, alignment: .leading).padding(4)

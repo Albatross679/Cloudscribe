@@ -280,23 +280,27 @@ class IndicatorViewModel: ObservableObject {
 
 struct RecordingIndicator: View {
     let isBlinking: Bool
+    private static let waveHeights: [(CGFloat, CGFloat)] = [(4, 10), (10, 5), (14, 8), (7, 14), (4, 9)]
     
     var body: some View {
-        Circle()
-            .fill(
-                LinearGradient(
-                    colors: [
-                        Color.red.opacity(0.8),
-                        Color.red
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .frame(width: 8, height: 8)
-            .shadow(color: .red.opacity(0.5), radius: 4)
-            .opacity(isBlinking ? 0.3 : 1.0)
-            .animation(.easeInOut(duration: 0.4), value: isBlinking)
+        HStack(spacing: 6) {
+            Circle()
+                .fill(Theme.orangeRed)
+                .frame(width: 8, height: 8)
+                .opacity(isBlinking ? 0.3 : 1.0)
+
+            // Moves with the blink timer, which runs only while recording.
+            HStack(spacing: 2) {
+                ForEach(Self.waveHeights.indices, id: \.self) { index in
+                    let heights = Self.waveHeights[index]
+                    Capsule()
+                        .fill(Theme.orangeRed)
+                        .frame(width: 2, height: isBlinking ? heights.1 : heights.0)
+                }
+            }
+            .frame(height: 14)
+        }
+        .animation(.easeInOut(duration: 0.4), value: isBlinking)
     }
 }
 
@@ -306,7 +310,7 @@ struct CancelConfirmationBar: View {
     var body: some View {
         GeometryReader { geo in
             Capsule()
-                .fill(Color.orange)
+                .fill(Theme.amber)
                 .frame(width: geo.size.width * progress, height: 2)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -334,10 +338,13 @@ struct IndicatorWindow: View {
     @ObservedObject var viewModel: IndicatorViewModel
     @Environment(\.colorScheme) private var colorScheme
     
-    private var backgroundColor: Color {
-        colorScheme == .dark
-            ? Color.black.opacity(0.24)
-            : Color.white.opacity(0.24)
+    /// Recording is outlined orange-red, transcribing and notices amber.
+    private var outlineColor: Color {
+        switch viewModel.state {
+        case .recording: Theme.orangeRed
+        case .decoding, .busy, .noMicrophone: Theme.amber
+        default: Theme.line
+        }
     }
     
     var body: some View {
@@ -360,12 +367,12 @@ struct IndicatorWindow: View {
             case .recording:
                 HStack(spacing: 8) {
                     RecordingIndicator(isBlinking: viewModel.isBlinking)
-                        .frame(width: 24)
+                        .fixedSize()
                     
                     if viewModel.isConfirmingCancel {
                         Text("Press Esc to cancel")
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.orange)
+                            .foregroundColor(Theme.amber)
                             .transition(.opacity)
                     } else {
                         Text("Recording...")
@@ -390,24 +397,24 @@ struct IndicatorWindow: View {
             case .busy:
                 HStack(spacing: 8) {
                     Image(systemName: "hourglass")
-                        .foregroundColor(.orange)
+                        .foregroundColor(Theme.amber)
                         .frame(width: 24)
 
                     Text("Processing...")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.orange)
+                        .foregroundColor(Theme.amber)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             case .noMicrophone:
                 HStack(spacing: 8) {
                     Image(systemName: "mic.slash")
-                        .foregroundColor(.orange)
+                        .foregroundColor(Theme.amber)
                         .frame(width: 24)
 
                     Text("No microphone")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.orange)
+                        .foregroundColor(Theme.amber)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -417,13 +424,10 @@ struct IndicatorWindow: View {
         }
         .padding(.horizontal, 24)
         .frame(height: Self.cardSize.height)
+        .foregroundStyle(Theme.text)
         .background {
-            rect
-                .fill(backgroundColor)
-                .background {
-                    rect
-                        .fill(Material.thinMaterial)
-                }
+            rect.fill(Theme.panel)
+            rect.strokeBorder(outlineColor, lineWidth: 1)
         }
         .overlay(alignment: .bottom) {
             if viewModel.isConfirmingCancel {

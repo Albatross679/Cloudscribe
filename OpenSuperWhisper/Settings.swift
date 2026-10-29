@@ -995,7 +995,9 @@ struct SettingsView: View {
             }
         .padding()
         .frame(width: sheetSize.width, height: sheetSize.height)
-        .background(Color(.windowBackgroundColor))
+        .foregroundStyle(Theme.text)
+        .tint(Theme.accent)
+        .background(Theme.background)
         .safeAreaInset(edge: .bottom) {
             HStack {
                 Button("Done") {
@@ -1018,12 +1020,12 @@ struct SettingsView: View {
                         Text("GitHub")
                             .font(.system(size: 11))
                     }
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
                 }
                 .buttonStyle(.plain)
             }
             .padding()
-            .background(Color(.windowBackgroundColor))
+            .background(Theme.background)
         }
         .onAppear {
             previousModelURL = viewModel.selectedModelURL
@@ -1054,12 +1056,12 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("API keys are plaintext in this Mac's private Application Support/OSW Cloud/credentials.json, not in the app or Keychain. Keep this file private.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(Theme.mutedText)
                 .fixedSize(horizontal: false, vertical: true)
             if let message = viewModel.credentialStorageMessage {
                 Label(message, systemImage: "exclamationmark.triangle")
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.amber)
                     .fixedSize(horizontal: false, vertical: true)
             }
             HStack {
@@ -1092,7 +1094,7 @@ struct SettingsView: View {
                !notes.isEmpty {
                 Text(notes)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -1109,7 +1111,7 @@ struct SettingsView: View {
                     systemImage: "exclamationmark.triangle.fill"
                 )
                 .font(.caption)
-                .foregroundStyle(.orange)
+                .foregroundStyle(Theme.amber)
             }
 
             Picker("Audio speed", selection: $viewModel.cloudflareCompressionRate) {
@@ -1125,7 +1127,7 @@ struct SettingsView: View {
             }
             Text("Speeds up cloud uploads while preserving pitch. Higher speeds lower cost but can reduce accuracy. Applied on this Mac, so every provider honors it.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(Theme.mutedText)
                 .fixedSize(horizontal: false, vertical: true)
 
             Divider()
@@ -1146,7 +1148,7 @@ struct SettingsView: View {
                 }
                 Text("Adds roughly 3 seconds. Removes filler words and fixes punctuation. Runs on the selected provider's own text models.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -1165,11 +1167,11 @@ struct SettingsView: View {
                         .controlSize(.small)
                 case .ok(let message):
                     Label(message, systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Theme.green)
                         .font(.caption)
                 case .failed(let message):
                     Label(message, systemImage: "xmark.circle.fill")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Theme.orangeRed)
                         .font(.caption)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -1185,7 +1187,7 @@ struct SettingsView: View {
                         NotificationCenter.default.post(name: .showCloudflareSetup, object: nil)
                     }
                 }
-                .buttonStyle(.link)
+                .buttonStyle(.themeLink)
             }
 
             cloudFeatureNotes
@@ -1210,7 +1212,7 @@ struct SettingsView: View {
             } else {
                 Text("Language lives in the Transcription tab.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
             }
 
             if let reason = features.vocabulary.reason {
@@ -1218,7 +1220,7 @@ struct SettingsView: View {
             } else {
                 Text("Vocabulary lives in the Transcription tab. Nova-3 boosts those terms only when a language is pinned.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
             }
 
             if let reason = features.usage.reason {
@@ -1231,7 +1233,7 @@ struct SettingsView: View {
     private func unavailableNote(_ text: String) -> some View {
         Label(text, systemImage: "info.circle")
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(Theme.mutedText)
             .fixedSize(horizontal: false, vertical: true)
     }
 
@@ -1280,7 +1282,7 @@ struct SettingsView: View {
 
             Text("Stored as plaintext in a private local settings file, with a separate key for each provider.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(Theme.mutedText)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -1307,11 +1309,11 @@ struct SettingsView: View {
                 } else if let account = viewModel.cloudflareAccounts.first {
                     Text("Using Cloudflare account: \(account.name)")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Theme.mutedText)
                 }
                 Text("Paste a Workers AI API Token and the app finds its account automatically. Create one from Workers AI > Use REST API; it is saved in your private local settings file.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
             } else {
                 Text("Worker Endpoint")
                     .font(.headline)
@@ -1331,7 +1333,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Speech Recognition Engine")
                     .font(.headline)
-                    .foregroundColor(.primary)
+                    .foregroundColor(Theme.text)
                 
                 EngineChoiceSelector(
                     selection: $viewModel.engineSelection,
@@ -1347,11 +1349,11 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Whisper Model")
                             .font(.headline)
-                            .foregroundColor(.primary)
+                            .foregroundColor(Theme.text)
                         
                         Text("Download Models")
                             .font(.headline)
-                            .foregroundColor(.primary)
+                            .foregroundColor(Theme.text)
                             .padding(.top, 8)
                         
                         VStack(spacing: 12) {
@@ -1379,11 +1381,10 @@ struct SettingsView: View {
                             }
                             Text(WhisperModelManager.shared.modelsDirectory.path)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.mutedText)
                                 .textSelection(.enabled)
                                 .padding(8)
-                                .background(Color(.textBackgroundColor).opacity(0.5))
-                                .cornerRadius(6)
+                                .themeRow()
                         }
                         .padding(.top, 8)
                     }
@@ -1391,11 +1392,11 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Parakeet Model")
                             .font(.headline)
-                            .foregroundColor(.primary)
+                            .foregroundColor(Theme.text)
                         
                         Text("Download Models")
                             .font(.headline)
-                            .foregroundColor(.primary)
+                            .foregroundColor(Theme.text)
                             .padding(.top, 8)
                         
                         VStack(spacing: 12) {
@@ -1421,11 +1422,10 @@ struct SettingsView: View {
                             }
                             Text(AsrModels.defaultCacheDirectory(for: .v3).deletingLastPathComponent().path)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.mutedText)
                                 .textSelection(.enabled)
                                 .padding(8)
-                                .background(Color(.textBackgroundColor).opacity(0.5))
-                                .cornerRadius(6)
+                                .themeRow()
                         }
                         .padding(.top, 8)
                     }
@@ -1433,8 +1433,7 @@ struct SettingsView: View {
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.controlBackgroundColor).opacity(0.3))
-            .cornerRadius(12)
+            .themePanel()
         }
         .padding()
     }
@@ -1446,7 +1445,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Language Settings")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Theme.text)
                     
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Transcription Language")
@@ -1461,8 +1460,7 @@ struct SettingsView: View {
                         .pickerStyle(.menu)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color(.controlBackgroundColor))
-                        .cornerRadius(8)
+                        .themeRow()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         
                         if Settings.asianLanguages.contains(viewModel.selectedLanguage) {
@@ -1471,7 +1469,7 @@ struct SettingsView: View {
                                     .font(.subheadline)
                                 Spacer()
                                 Toggle("", isOn: $viewModel.useAsianAutocorrect)
-                                    .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                                    .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                     .labelsHidden()
                             }
                             .padding(.top, 4)
@@ -1480,14 +1478,13 @@ struct SettingsView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
+                .themePanel()
                 
                 // Output Options
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Output Options")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Theme.text)
                     
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
@@ -1495,7 +1492,7 @@ struct SettingsView: View {
                                 .font(.subheadline)
                             Spacer()
                             Toggle("", isOn: $viewModel.showTimestamps)
-                                .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                                .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                 .labelsHidden()
                         }
                         
@@ -1504,7 +1501,7 @@ struct SettingsView: View {
                                 .font(.subheadline)
                             Spacer()
                             Toggle("", isOn: $viewModel.suppressBlankAudio)
-                                .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                                .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                 .labelsHidden()
                         }
                         
@@ -1514,25 +1511,24 @@ struct SettingsView: View {
                                     .font(.subheadline)
                                 Text("Appends a space when transcription ends with punctuation")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.mutedText)
                             }
                             Spacer()
                             Toggle("", isOn: $viewModel.addSpaceAfterSentence)
-                                .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                                .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                 .labelsHidden()
                         }
                     }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
+                .themePanel()
 
                 // Clipboard & Paste
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Clipboard & Paste")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Theme.text)
 
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
@@ -1541,11 +1537,11 @@ struct SettingsView: View {
                                     .font(.subheadline)
                                 Text("Keep transcription in clipboard after recording")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.mutedText)
                             }
                             Spacer()
                             Toggle("", isOn: $viewModel.autoCopyToClipboard)
-                                .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                                .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                 .labelsHidden()
                         }
 
@@ -1555,52 +1551,46 @@ struct SettingsView: View {
                                     .font(.subheadline)
                                 Text("Automatically paste into the focused app")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.mutedText)
                             }
                             Spacer()
                             Toggle("", isOn: $viewModel.autoPasteTranscription)
-                                .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                                .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                 .labelsHidden()
                         }
                     }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
+                .themePanel()
 
                 // Vocabulary
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Vocabulary")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Theme.text)
                     
                     VStack(alignment: .leading, spacing: 8) {
                         TextEditor(text: $viewModel.initialPrompt)
                             .frame(height: 60)
                             .padding(6)
-                            .background(Color(.textBackgroundColor))
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
+                            .scrollContentBackground(.hidden)
+                            .themeRow()
                         
                         Text("Terms the model should spell correctly, separated by commas. Words and names, not sentences.")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.mutedText)
                     }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
+                .themePanel()
                 
                 // Transcriptions Directory
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Transcriptions Directory")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Theme.text)
                     
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
@@ -1619,24 +1609,21 @@ struct SettingsView: View {
                         
                         Text(Recording.recordingsDirectory.path)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.mutedText)
                             .textSelection(.enabled)
                             .padding(8)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(.textBackgroundColor).opacity(0.5))
-                            .cornerRadius(6)
+                            .themeRow()
                     }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
+                .themePanel()
                 
                 RecordingStorageSettingsView()
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(.controlBackgroundColor).opacity(0.3))
-                    .cornerRadius(12)
+                    .themePanel()
             }
             .padding()
         }
@@ -1649,7 +1636,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Decoding Strategy")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Theme.text)
                     
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
@@ -1657,7 +1644,7 @@ struct SettingsView: View {
                                 .font(.subheadline)
                             Spacer()
                             Toggle("", isOn: $viewModel.useBeamSearch)
-                                .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                                .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                 .labelsHidden()
                                 .help("Beam search can provide better results but is slower")
                         }
@@ -1676,14 +1663,13 @@ struct SettingsView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
+                .themePanel()
                 
                 // Model Parameters
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Model Parameters")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Theme.text)
                     
                     VStack(alignment: .leading, spacing: 14) {
                         VStack(alignment: .leading, spacing: 6) {
@@ -1693,7 +1679,7 @@ struct SettingsView: View {
                                 Spacer()
                                 Text(String(format: "%.2f", viewModel.temperature))
                                     .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.violet)
                             }
                             
                             Slider(value: $viewModel.temperature, in: 0.0...1.0, step: 0.1)
@@ -1707,7 +1693,7 @@ struct SettingsView: View {
                                 Spacer()
                                 Text(String(format: "%.2f", viewModel.noSpeechThreshold))
                                     .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.violet)
                             }
                             
                             Slider(value: $viewModel.noSpeechThreshold, in: 0.0...1.0, step: 0.1)
@@ -1717,29 +1703,27 @@ struct SettingsView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
+                .themePanel()
                 
                 // Debug Options
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Debug Options")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Theme.text)
                     
                     HStack {
                         Text("Debug Mode")
                             .font(.subheadline)
                         Spacer()
                         Toggle("", isOn: $viewModel.debugMode)
-                            .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                            .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                             .labelsHidden()
                             .help("Enable additional logging and debugging information")
                     }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
+                .themePanel()
             }
             .padding()
         }
@@ -1757,7 +1741,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(message)
                     .font(.caption)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Theme.amber)
                 
                 Button("Grant Permission") {
                     grantAction()
@@ -1782,7 +1766,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Recording Trigger")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Theme.text)
                     
                     VStack(alignment: .leading, spacing: 16) {
                         Picker("", selection: Binding(
@@ -1829,14 +1813,13 @@ struct SettingsView: View {
                                 }
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
-                                .background(Color(.textBackgroundColor).opacity(0.5))
-                                .cornerRadius(8)
+                                .themeRow()
 
                                 Text(viewModel.doublePressToTrigger
                                      ? "Double-tap to toggle recording"
                                      : "One-tap to toggle recording")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.mutedText)
 
                                 HStack {
                                     VStack(alignment: .leading, spacing: 2) {
@@ -1844,17 +1827,16 @@ struct SettingsView: View {
                                             .font(.subheadline)
                                         Text("Require two quick taps to avoid accidental activation")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(Theme.mutedText)
                                     }
                                     Spacer()
                                     Toggle("", isOn: $viewModel.doublePressToTrigger)
-                                        .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                                        .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                         .labelsHidden()
                                 }
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
-                                .background(Color(.textBackgroundColor).opacity(0.5))
-                                .cornerRadius(8)
+                                .themeRow()
 
                                 permissionWarning(
                                     message: "⚠️ This mode requires Input Monitoring permission. macOS requires this to detect single modifier key presses globally. Only modifier key events (⌘, ⌥, ⇧, ⌃, Fn) are monitored — no regular keystrokes are captured.",
@@ -1879,12 +1861,11 @@ struct SettingsView: View {
                                 }
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
-                                .background(Color(.textBackgroundColor).opacity(0.5))
-                                .cornerRadius(8)
+                                .themeRow()
 
                                 Text("Click to toggle recording, or hold when Hold to Record is on. The left and right buttons are reserved — pick the middle or an extra (thumb) button.")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.mutedText)
 
                                 permissionWarning(
                                     message: "⚠️ This mode requires Accessibility permission so the button can be detected globally and used only as a recording trigger. Only the selected mouse button is intercepted — no other clicks or keystrokes are captured.",
@@ -1904,12 +1885,11 @@ struct SettingsView: View {
                                 }
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
-                                .background(Color(.textBackgroundColor).opacity(0.5))
-                                .cornerRadius(8)
+                                .themeRow()
 
                                 if isRecordingNewShortcut {
                                     Text("Press your new shortcut combination...")
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
                                         .font(.subheadline)
                                 }
                             }
@@ -1918,14 +1898,13 @@ struct SettingsView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
+                .themePanel()
                 
                 // Recording Behavior
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Recording Behavior")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Theme.text)
                     
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
@@ -1934,11 +1913,11 @@ struct SettingsView: View {
                                     .font(.subheadline)
                                 Text("Hold the shortcut to record, release to stop")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.mutedText)
                             }
                             Spacer()
                             Toggle("", isOn: $viewModel.holdToRecord)
-                                .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                                .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                 .labelsHidden()
                         }
                         
@@ -1947,7 +1926,7 @@ struct SettingsView: View {
                                 .font(.subheadline)
                             Spacer()
                             Toggle("", isOn: $viewModel.playSoundOnRecordStart)
-                                .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                                .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                 .labelsHidden()
                                 .help("Play a notification sound when recording begins")
                         }
@@ -1958,25 +1937,24 @@ struct SettingsView: View {
                                     .font(.subheadline)
                                 Text("Skip the double-Esc confirmation for recordings longer than 10 seconds")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.mutedText)
                             }
                             Spacer()
                             Toggle("", isOn: $viewModel.escCancelWithoutConfirmation)
-                                .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                                .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                 .labelsHidden()
                         }
                     }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
+                .themePanel()
 
                 // Application
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Application")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Theme.text)
 
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
@@ -1984,18 +1962,17 @@ struct SettingsView: View {
                                 .font(.subheadline)
                             Text("Launch without opening the main window; use the menu bar icon to open it")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.mutedText)
                         }
                         Spacer()
                         Toggle("", isOn: $viewModel.startHiddenInMenuBar)
-                            .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                            .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                             .labelsHidden()
                     }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
+                .themePanel()
             }
             .padding()
         }
@@ -2138,7 +2115,7 @@ struct FluidAudioModelDownloadItemView: View {
                 
                 Text(model.description)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
                 
                 if viewModel.isDownloading && viewModel.downloadingModelName == model.name {
                     ProgressView(value: model.downloadProgress)
@@ -2159,7 +2136,7 @@ struct FluidAudioModelDownloadItemView: View {
             } else if model.isDownloaded {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(Theme.green)
                         .imageScale(.large)
                 } else {
                     Button(action: {
@@ -2174,7 +2151,7 @@ struct FluidAudioModelDownloadItemView: View {
                 HStack(spacing: 8) {
                     Text(model.sizeString)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Theme.mutedText)
                     
                     Button(action: {
                         Task {
@@ -2197,8 +2174,7 @@ struct FluidAudioModelDownloadItemView: View {
             }
         }
         .padding(12)
-        .background(isSelected ? Color(.controlBackgroundColor).opacity(0.7) : Color(.controlBackgroundColor).opacity(0.5))
-        .cornerRadius(8)
+        .themeRow(selected: isSelected)
         .contentShape(Rectangle())
         .onTapGesture {
             if model.isDownloaded && !isSelected {
@@ -2228,7 +2204,7 @@ struct RecordingStorageSettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("History Storage")
                 .font(.headline)
-                .foregroundColor(.primary)
+                .foregroundColor(Theme.text)
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
@@ -2237,7 +2213,7 @@ struct RecordingStorageSettingsView: View {
                     Spacer()
                     Text(ByteCountFormatter.string(fromByteCount: diskUsage, countStyle: .file))
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Theme.violet)
                 }
 
                 HStack {
@@ -2269,7 +2245,7 @@ struct RecordingStorageSettingsView: View {
                             .font(.subheadline)
                         Text("Removes both audio files and their transcriptions from history")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.mutedText)
                     }
                     Spacer()
                     Toggle("", isOn: Binding(
@@ -2283,7 +2259,7 @@ struct RecordingStorageSettingsView: View {
                             }
                         }
                     ))
-                    .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                    .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                     .labelsHidden()
                     .help("Automatically delete recordings and their transcriptions older than the selected number of days")
                 }
@@ -2372,14 +2348,14 @@ struct ModelDownloadItemView: View {
                        let owner = huggingFaceOwner(fromPageURL: pageURL) {
                         Link(owner, destination: pageURL)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.mutedText)
                             .help("View on Hugging Face")
                     }
                 }
                 
                 Text(model.description)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
 
                 if viewModel.isDownloading && viewModel.downloadingModelName == model.name {
                     ProgressView(value: model.downloadProgress)
@@ -2400,7 +2376,7 @@ struct ModelDownloadItemView: View {
             } else if model.isDownloaded {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(Theme.green)
                         .imageScale(.large)
                 } else {
                     Button(action: {
@@ -2416,7 +2392,7 @@ struct ModelDownloadItemView: View {
                 HStack(spacing: 8) {
                     Text(model.sizeString)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Theme.mutedText)
                     
                     Button(action: {
                         Task {
@@ -2439,8 +2415,7 @@ struct ModelDownloadItemView: View {
             }
         }
         .padding(12)
-        .background(isSelected ? Color(.controlBackgroundColor).opacity(0.7) : Color(.controlBackgroundColor).opacity(0.5))
-        .cornerRadius(8)
+        .themeRow(selected: isSelected)
         .contentShape(Rectangle())
         .onTapGesture {
             if model.isDownloaded && !isSelected {

@@ -41,16 +41,16 @@ struct CloudflareUsageView: View {
     let refreshToken: Int
 
     private var tint: Color {
-        guard let fraction = model.usage?.today.free_used_fraction else { return .secondary }
-        if fraction >= 1 { return .orange }
-        if fraction >= 0.8 { return .yellow }
-        return .secondary
+        guard let fraction = model.usage?.today.free_used_fraction else { return Theme.mutedText }
+        if fraction >= 1 { return Theme.orangeRed }
+        if fraction >= 0.8 { return Theme.amber }
+        return Theme.mutedText
     }
 
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "cloud")
-                .foregroundColor(.secondary)
+                .foregroundColor(Theme.mutedText)
                 .imageScale(.medium)
 
             if let today = model.usage?.today {
@@ -60,11 +60,11 @@ struct CloudflareUsageView: View {
             } else if model.failed {
                 Text("Usage unavailable")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
             } else {
                 Text("Loading usage...")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
             }
         }
         .padding(.leading, 4)

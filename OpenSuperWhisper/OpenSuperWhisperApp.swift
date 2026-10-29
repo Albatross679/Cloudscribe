@@ -33,6 +33,9 @@ struct OpenSuperWhisperApp: App {
             }
             .frame(width: 450)
             .frame(minHeight: 400, maxHeight: 900)
+            .foregroundStyle(Theme.text)
+            .tint(Theme.accent)
+            .background(Theme.background)
             .environmentObject(appState)
             .onReceive(NotificationCenter.default.publisher(for: .showCloudflareSetup)) { _ in
                 appState.presentCloudflareSetup()
@@ -559,6 +562,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         window.delegate = self
         window.minSize = NSSize(width: 450, height: 400)
         window.maxSize = NSSize(width: 450, height: 900)
+        window.backgroundColor = Theme.NSColors.background
 
         if hideMainWindowAtLaunch {
             hideMainWindowAtLaunch = false

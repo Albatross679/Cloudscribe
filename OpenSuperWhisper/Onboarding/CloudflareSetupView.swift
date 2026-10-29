@@ -169,7 +169,7 @@ struct CloudflareSetupView: View {
 
             Image(systemName: "waveform.badge.mic")
                 .font(.system(size: 38))
-                .foregroundStyle(.tint)
+                .foregroundStyle(Theme.accent)
             Text("Set up Cloud Dictation")
                 .font(.title.bold())
             Text("Dictation runs on your own Cloudflare account, whose free tier covers hours of daily use.")
@@ -185,19 +185,19 @@ struct CloudflareSetupView: View {
 
                 Text("In Cloudflare, click Workers AI, then Use REST API, then Create a Workers AI API Token. For a custom token, add Workers AI – Read and Workers AI – Edit.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.mutedText)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("Keys are plaintext in a private local settings file, not in the app or Keychain. Existing Keychain entries are not changed.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.mutedText)
                     .fixedSize(horizontal: false, vertical: true)
                 if let message = AuthTokenStore.persistenceError ?? AuthTokenStore.importMessage(for: .cloudflare, connectionMode: "direct") {
                     Text(message)
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.amber)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Text("Paste your API token")
@@ -217,7 +217,7 @@ struct CloudflareSetupView: View {
                 } else if let account = viewModel.accounts.first {
                     Text("Using Cloudflare account: \(account.name)")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.mutedText)
                 }
             }
 
@@ -243,7 +243,7 @@ struct CloudflareSetupView: View {
             Button("Use a local model or Worker mode instead") {
                 appState.skipCloudflareSetupToSettings()
             }
-            .buttonStyle(.link)
+            .buttonStyle(.themeLink)
         }
         .padding(28)
     }
@@ -269,14 +269,14 @@ struct CloudflareSetupView: View {
         case .idle:
             Text("Records about two seconds from the selected microphone.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.mutedText)
         case .recording, .transcribing:
             ProgressView()
                 .controlSize(.small)
         case .succeeded(let text):
             VStack(alignment: .leading, spacing: 3) {
                 Label("Cloudflare heard:", systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.green)
                     .font(.caption.bold())
                 Text("“\(text)”")
                     .font(.caption)
@@ -284,7 +284,7 @@ struct CloudflareSetupView: View {
             }
         case .failed(let message):
             Label(message, systemImage: "xmark.circle.fill")
-                .foregroundStyle(.red)
+                .foregroundStyle(Theme.orangeRed)
                 .font(.caption)
                 .fixedSize(horizontal: false, vertical: true)
         }

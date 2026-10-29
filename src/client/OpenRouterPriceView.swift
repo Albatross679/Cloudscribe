@@ -12,6 +12,7 @@ enum OpenRouterPriceWindow {
             window.title = "OpenRouter prices"
             window.contentMinSize = NSSize(width: 460, height: 400)
             window.isReleasedWhenClosed = false
+            window.backgroundColor = Theme.NSColors.background
             window.center()
             controller = NSWindowController(window: window)
         }
@@ -32,14 +33,15 @@ struct OpenRouterPriceSummary: View {
             if let selectedModelID {
                 Label(book.price(for: selectedModelID).label, systemImage: "dollarsign.circle")
                     .font(.caption)
+                    .foregroundStyle(Theme.green)
                     .textSelection(.enabled)
             }
             OpenRouterPriceStatus(book: book)
             HStack(spacing: 12) {
                 Button("Compare all OpenRouter prices") { OpenRouterPriceWindow.show(selectedModelID: selectedModelID) }
-                    .buttonStyle(.link)
+                    .buttonStyle(.themeLink)
                 Button("Refresh prices") { Task { await book.refresh() } }
-                    .buttonStyle(.link)
+                    .buttonStyle(.themeLink)
                     .disabled(book.isRefreshing)
             }
             .font(.caption)
@@ -59,21 +61,21 @@ struct OpenRouterPriceStatus: View {
                     ProgressView().controlSize(.small)
                     Text("Fetching current OpenRouter prices…")
                 }
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.mutedText)
             } else if let snapshot = book.snapshot {
                 let fetched = "OpenRouter list prices fetched " + snapshot.fetchedAt.formatted(date: .abbreviated, time: .shortened)
                 if book.isPossiblyOutdated {
                     Label(fetched + ". " + (book.refreshError.map { $0 + " " } ?? "") + "These prices may be outdated.",
                           systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.amber)
                 } else {
-                    Text(fetched).foregroundStyle(.secondary)
+                    Text(fetched).foregroundStyle(Theme.mutedText)
                 }
             } else if let error = book.refreshError {
                 Label(error + " Prices unavailable until a fetch succeeds.", systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.amber)
             } else {
-                Text("Prices not fetched yet.").foregroundStyle(.secondary)
+                Text("Prices not fetched yet.").foregroundStyle(Theme.mutedText)
             }
         }
         .font(.caption)
@@ -141,7 +143,7 @@ struct OpenRouterPriceList: View {
                 OpenRouterPriceStatus(book: book)
                 Text("List prices for every speech-to-text model in the OpenRouter picker. The selected model is highlighted. Each response's usage.cost and OpenRouter's activity page are the billing authority.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.mutedText)
                     .fixedSize(horizontal: false, vertical: true)
 
                 if !minuteRows.isEmpty {
@@ -155,7 +157,7 @@ struct OpenRouterPriceList: View {
                             tokenChart
                             Text("These models cannot share the per-minute axis: their cost depends on how many audio and text tokens a recording produces.")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.mutedText)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .padding(4)
@@ -168,7 +170,7 @@ struct OpenRouterPriceList: View {
                                 HStack(alignment: .firstTextBaseline) {
                                     Text(model.label)
                                     Spacer()
-                                    Text(price.label).foregroundStyle(.secondary).textSelection(.enabled)
+                                    Text(price.label).foregroundStyle(Theme.mutedText).textSelection(.enabled)
                                 }
                             }
                         }
@@ -180,7 +182,10 @@ struct OpenRouterPriceList: View {
             }
             .padding(20)
         }
-        .background(Color(.windowBackgroundColor))
+        .foregroundStyle(Theme.text)
+        .tint(Theme.accent)
+        .groupBoxStyle(ThemeGroupBoxStyle())
+        .background(Theme.background)
         .onAppear { book.refreshIfStale() }
     }
 
@@ -188,16 +193,19 @@ struct OpenRouterPriceList: View {
         let rows = minuteRows
         let top = rows.map(\.usd).max() ?? 0
         return Chart(rows) { row in
-            BarMark(x: .value("USD per audio minute", row.usd), y: .value("Model", row.label), height: .fixed(12))
-                .foregroundStyle(row.id == selectedModelID ? Color.accentColor : Color.accentColor.opacity(0.4))
+            let color = row.id == selectedModelID ? Theme.cyan : Theme.green
+            BarMark(x: .value("USD per audio minute", row.usd), y: .value("Model", row.label), height: .fixed(12), stacking: .unstacked)
+                .foregroundStyle(color)
                 .annotation(position: .trailing, alignment: .leading, spacing: 4) {
                     Text(OpenRouterPricing.money(row.usd))
                         .font(.caption.monospacedDigit())
                         .fontWeight(row.id == selectedModelID ? .semibold : .regular)
-                        .foregroundStyle(row.id == selectedModelID ? .primary : .secondary)
+                        .foregroundStyle(row.id == selectedModelID ? Theme.text : Theme.mutedText)
                 }
                 .accessibilityLabel(row.label)
                 .accessibilityValue(OpenRouterPricing.money(row.usd) + " per audio minute")
+            BarMark(x: .value("USD per audio minute", row.usd), y: .value("Model", row.label), height: .fixed(12), stacking: .unstacked)
+                .themeBarFill(color)
         }
         // Room on the right for the longest bar's price label.
         .chartXScale(domain: 0...max(top * 1.18, 0.0001))
@@ -247,19 +255,23 @@ struct OpenRouterPriceList: View {
         let rows = tokenRows
         let top = rows.map { max($0.input, $0.output) }.max() ?? 0
         return Chart(tokenBars) { bar in
-            BarMark(x: .value("USD per 1M tokens", bar.usd), y: .value("Model", bar.label), height: .fixed(12))
+            BarMark(x: .value("USD per 1M tokens", bar.usd), y: .value("Model", bar.label), height: .fixed(12), stacking: .unstacked)
                 .position(by: .value("Token type", bar.kind))
                 .foregroundStyle(by: .value("Token type", bar.kind))
                 .opacity(bar.emphasized ? 1 : 0.5)
                 .annotation(position: .trailing, alignment: .leading, spacing: 4) {
                     Text(OpenRouterPricing.money(bar.usd))
                         .font(.caption2.monospacedDigit())
-                        .foregroundStyle(bar.modelID == selectedModelID ? .primary : .secondary)
+                        .foregroundStyle(bar.modelID == selectedModelID ? Theme.text : Theme.mutedText)
                 }
                 .accessibilityLabel(bar.label + " " + bar.kind.lowercased())
                 .accessibilityValue(OpenRouterPricing.money(bar.usd) + " per 1M tokens")
+            BarMark(x: .value("USD per 1M tokens", bar.usd), y: .value("Model", bar.label), height: .fixed(12), stacking: .unstacked)
+                .position(by: .value("Token type", bar.kind))
+                .themeBarFill(bar.kind == "Input" ? Theme.green : Theme.violet)
+                .opacity(bar.emphasized ? 1 : 0.5)
         }
-        .chartForegroundStyleScale(["Input": Color.accentColor, "Output": Color.orange])
+        .chartForegroundStyleScale(["Input": Theme.green, "Output": Theme.violet])
         .chartXScale(domain: 0...max(top * 1.2, 0.01))
         .chartYScale(domain: rows.map(\.label))
         .chartXAxis {
