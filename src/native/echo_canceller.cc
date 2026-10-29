@@ -11,7 +11,7 @@ namespace {
 // Builds AEC3 itself, tuned for dictation, where the person speaking over
 // the playback matters more than the last trace of echo. Measured on a real
 // MacBook speaker echo with a second voice mixed in at the echo's level, APM's
-// own AEC3 build kept 1 to 11 of that voice's 14 words, this one 5 to 14,
+// own AEC3 build kept 1 to 13 of that voice's 14 words, this one 5 to 14,
 // and echo alone still transcribed as nothing.
 class EchoCanceller3Factory : public webrtc::EchoControlFactory {
  public:
