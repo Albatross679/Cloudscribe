@@ -2136,7 +2136,7 @@ def patch_transcribing_timer() -> None:
     patch(path, """    static let cardSize = CGSize(width: 200, height: 36)
     static let windowSize = CGSize(width: 256, height: 96)""", """    static let cardSize = CGSize(width: 200, height: 36)
     /// The timed out message does not fit the normal card.
-    static let timedOutCardWidth: CGFloat = 264
+    static let timedOutCardWidth: CGFloat = 256
     static let windowSize = CGSize(width: 320, height: 96)""", "Timer: wider window")
     patch(path, """        .clipShape(rect)
         .frame(width: Self.cardSize.width)""", """        .clipShape(rect)

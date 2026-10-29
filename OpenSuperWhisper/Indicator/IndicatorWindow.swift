@@ -362,7 +362,7 @@ struct IndicatorWindow: View {
     /// need margins, otherwise the card edges are visibly clipped mid-animation.
     static let cardSize = CGSize(width: 200, height: 36)
     /// The timed out message does not fit the normal card.
-    static let timedOutCardWidth: CGFloat = 264
+    static let timedOutCardWidth: CGFloat = 256
     static let windowSize = CGSize(width: 320, height: 96)
     static let appearOffset: CGFloat = 20
     static let appearInitialScale: CGFloat = 0.5
