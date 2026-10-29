@@ -339,7 +339,7 @@ struct ContentView: View {
                     // Search bar
                     HStack {
                         Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.mutedText)
 
                         TextField("Search in transcriptions", text: $searchText)
                             .textFieldStyle(PlainTextFieldStyle())
@@ -355,19 +355,14 @@ struct ContentView: View {
                                 viewModel.search(query: "")
                             }) {
                                 Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.mutedText)
                                     .imageScale(.medium)
                             }
                             .buttonStyle(.plain)
                         }
                     }
                     .padding(10)
-                    .background(ThemePalette.panelSurface(colorScheme))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(ThemePalette.panelBorder(colorScheme), lineWidth: 1)
-                    )
-                    .cornerRadius(20)
+                    .themePanel()
                     .padding([.horizontal, .top])
 
                     ScrollView(showsIndicators: false) {
@@ -377,32 +372,32 @@ struct ContentView: View {
                                     // Show "no results" for search
                                     Image(systemName: "magnifyingglass")
                                         .font(.system(size: 40))
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
                                         .padding(.top, 40)
 
                                     Text("No results found")
                                         .font(.headline)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
 
                                     Text("Try different search terms")
                                         .font(.subheadline)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
                                         .multilineTextAlignment(.center)
                                         .padding(.horizontal)
                                 } else {
                                     // Show "start recording" tip
                                     Image(systemName: "arrow.down.circle")
                                         .font(.system(size: 40))
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
                                         .padding(.top, 40)
 
                                     Text("No recordings yet")
                                         .font(.headline)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
 
                                     Text("Tap the record button below to get started")
                                         .font(.subheadline)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
                                         .multilineTextAlignment(.center)
                                         .padding(.horizontal)
 
@@ -410,26 +405,26 @@ struct ContentView: View {
                                         VStack(spacing: 8) {
                                             Text("Pro Tip:")
                                                 .font(.subheadline)
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(Theme.mutedText)
 
                                             HStack(spacing: 4) {
                                                 Text("Press")
                                                     .font(.subheadline)
-                                                    .foregroundColor(.secondary)
+                                                    .foregroundColor(Theme.mutedText)
                                                 Text(shortcut.description)
                                                     .font(.system(size: 16, weight: .medium))
                                                     .padding(.horizontal, 6)
                                                     .padding(.vertical, 3)
-                                                    .background(Color.secondary.opacity(0.2))
+                                                    .background(Theme.border)
                                                     .cornerRadius(6)
                                                 Text("anywhere")
                                                     .font(.subheadline)
-                                                    .foregroundColor(.secondary)
+                                                    .foregroundColor(Theme.mutedText)
                                             }
 
                                             Text("to quickly record and paste text")
                                                 .font(.subheadline)
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(Theme.mutedText)
                                         }
                                         .padding(.top, 16)
                                     }
@@ -476,8 +471,8 @@ struct ContentView: View {
                             .fill(
                                 LinearGradient(
                                     gradient: Gradient(colors: [
-                                        ThemePalette.windowBackground(colorScheme).opacity(1),
-                                        ThemePalette.windowBackground(colorScheme).opacity(0)
+                                        Theme.background.opacity(1),
+                                        Theme.background.opacity(0)
                                     ]),
                                     startPoint: .top,
                                     endPoint: .bottom
@@ -517,21 +512,21 @@ struct ContentView: View {
                                 HStack(spacing: 6) {
                                     Text(currentShortcutDescription)
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
                                     Text("to show mini recorder")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
                                 }
                                 .padding(.leading, 4)
 
                                 // Подсказка о drag-n-drop
                                 HStack(spacing: 6) {
                                     Image(systemName: "arrow.down.doc.fill")
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
                                         .imageScale(.medium)
                                     Text("Drop audio file here to transcribe")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
                                 }
                                 .padding(.leading, 4)
 
@@ -557,14 +552,9 @@ struct ContentView: View {
                                     }) {
                                         Image(systemName: "trash")
                                             .font(.title3)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(Theme.mutedText)
                                             .frame(width: 32, height: 32)
-                                            .background(ThemePalette.panelSurface(colorScheme))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 8)
-                                                    .stroke(ThemePalette.panelBorder(colorScheme), lineWidth: 1)
-                                            )
-                                            .cornerRadius(8)
+                                            .themePanel()
                                     }
                                     .buttonStyle(.plain)
                                     .help("Delete all recordings")
@@ -588,14 +578,9 @@ struct ContentView: View {
                                 }) {
                                     Image(systemName: "gear")
                                         .font(.title3)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Theme.mutedText)
                                         .frame(width: 32, height: 32)
-                                        .background(ThemePalette.panelSurface(colorScheme))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .stroke(ThemePalette.panelBorder(colorScheme), lineWidth: 1)
-                                        )
-                                        .cornerRadius(8)
+                                        .themePanel()
                                 }
                                 .buttonStyle(.plain)
                                 .help("Settings")
@@ -607,7 +592,7 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 400, idealWidth: 400)
-        .background(ThemePalette.windowBackground(colorScheme))
+        .background(Theme.background)
         .onAppear {
             viewModel.loadInitialData()
         }
@@ -709,7 +694,7 @@ struct PermissionRow: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: isGranted ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .foregroundColor(isGranted ? .green : .red)
+                    .foregroundColor(isGranted ? Theme.green : Theme.orangeRed)
 
                 Text(title)
                     .font(.headline)
@@ -726,11 +711,10 @@ struct PermissionRow: View {
 
             Text(description)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(Theme.mutedText)
         }
         .padding()
-        .background(ThemePalette.panelSurface(colorScheme))
-        .cornerRadius(10)
+        .themePanel()
     }
 }
 
@@ -785,7 +769,7 @@ struct RecordingRow: View {
                     if let sourceFileName = recording.sourceFileName {
                         Text(sourceFileName)
                             .font(.subheadline.weight(.medium))
-                            .foregroundColor(.primary)
+                            .foregroundColor(Theme.text)
                             .lineLimit(1)
                             .truncationMode(.middle)
                     }
@@ -794,16 +778,16 @@ struct RecordingRow: View {
                         if recording.status == .pending {
                             Image(systemName: "clock")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.mutedText)
                         } else {
                            
                             ZStack {
                                 Circle()
-                                    .stroke(Color.secondary.opacity(0.2), lineWidth: 2)
+                                    .stroke(Theme.line, lineWidth: 2)
                                 
                                 Circle()
                                     .trim(from: 0, to: CGFloat(recording.progress))
-                                    .stroke(Color.secondary, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                                    .stroke(Theme.amber, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                                     .rotationEffect(.degrees(-90))
                                     .animation(.linear(duration: 0.1), value: recording.progress)
                             }
@@ -811,14 +795,14 @@ struct RecordingRow: View {
 
                             Text("\(Int(recording.progress * 100))%")
                                 .font(.caption.monospacedDigit())
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.mutedText)
                                 .contentTransition(.numericText())
                                 .animation(.linear(duration: 0.1), value: recording.progress)
                         }
                         
                         Text(statusText)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.mutedText)
                         
                         Spacer()
                     }
@@ -835,16 +819,16 @@ struct RecordingRow: View {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundColor(Theme.orangeRed)
                         Text("Transcription failed")
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundColor(Theme.orangeRed)
                     }
                     
                     if !recording.transcription.isEmpty {
                         Text(recording.transcription)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.mutedText)
                     }
                 }
                 .padding(.horizontal, 12)
@@ -867,7 +851,7 @@ struct RecordingRow: View {
             } else if !isPending {
                 Text("No speech detected")
                     .font(.body)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
                     .padding(.horizontal, 12)
                     .padding(.top, 8)
             }
@@ -880,7 +864,7 @@ struct RecordingRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(recording.timestamp, style: .date)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Theme.mutedText)
 
                     HStack(spacing: 4) {
                         Text(recording.timestamp, style: .time)
@@ -888,7 +872,7 @@ struct RecordingRow: View {
                         Text(TextUtil.formatDuration(recording.duration))
                     }
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.mutedText)
                 }
                 
                 if isRegenerating {
@@ -898,15 +882,15 @@ struct RecordingRow: View {
                         if recording.status == .pending {
                             Image(systemName: "clock")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.mutedText)
                         } else {
                             ZStack {
                                 Circle()
-                                    .stroke(Color.secondary.opacity(0.2), lineWidth: 2)
+                                    .stroke(Theme.line, lineWidth: 2)
                                 
                                 Circle()
                                     .trim(from: 0, to: CGFloat(recording.progress))
-                                    .stroke(Color.secondary, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                                    .stroke(Theme.amber, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                                     .rotationEffect(.degrees(-90))
                                     .animation(.linear(duration: 0.1), value: recording.progress)
                             }
@@ -914,14 +898,14 @@ struct RecordingRow: View {
 
                             Text("\(Int(recording.progress * 100))%")
                                 .font(.caption.monospacedDigit())
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.mutedText)
                                 .contentTransition(.numericText())
                                 .animation(.linear(duration: 0.1), value: recording.progress)
                         }
                         
                         Text(statusText)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.mutedText)
                     }
                     .transition(.opacity)
                 
@@ -940,7 +924,7 @@ struct RecordingRow: View {
                         }) {
                             Image(systemName: isPlaying ? "stop.circle.fill" : "play.circle.fill")
                                 .font(.system(size: 20))
-                                .foregroundColor(isPlaying ? .red : ThemePalette.iconAccent(colorScheme))
+                                .foregroundColor(isPlaying ? Theme.orangeRed : Theme.accent)
                                 .contentTransition(.symbolEffect(.replace))
                         }
                         .buttonStyle(.plain)
@@ -954,7 +938,7 @@ struct RecordingRow: View {
                         }) {
                             Image(systemName: "doc.on.doc.fill")
                                 .font(.system(size: 18))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.mutedText)
                         }
                         .buttonStyle(.plain)
                         .help("Copy entire text")
@@ -967,7 +951,7 @@ struct RecordingRow: View {
                         }) {
                             Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 18))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.mutedText)
                         }
                         .buttonStyle(.plain)
                         .help("Regenerate transcription")
@@ -983,7 +967,7 @@ struct RecordingRow: View {
                         }) {
                             Image(systemName: "trash.fill")
                                 .font(.system(size: 18))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.mutedText)
                         }
                         .buttonStyle(.plain)
                         .transition(.opacity)
@@ -996,14 +980,9 @@ struct RecordingRow: View {
             .animation(.easeInOut(duration: 0.2), value: isRegenerating)
             .padding(.horizontal, 12)
             .padding(.bottom, 8)
-            .background(ThemePalette.cardBackground(colorScheme))
+            .background(Theme.panel)
         }
-        .background(ThemePalette.cardBackground(colorScheme))
-        .cornerRadius(8)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(ThemePalette.cardBorder(colorScheme), lineWidth: 1)
-        )
+        .themePanel()
         .onHover { hovering in
             isHovered = hovering
         }
@@ -1017,14 +996,14 @@ struct ShimmerOverlay: View {
     var body: some View {
         GeometryReader { geometry in
             RoundedRectangle(cornerRadius: 6)
-                .fill(Color.secondary.opacity(0.08))
+                .fill(Theme.line.opacity(0.3))
                 .overlay(
                     RoundedRectangle(cornerRadius: 6)
                         .fill(
                             LinearGradient(
                                 gradient: Gradient(colors: [
                                     Color.clear,
-                                    Color.white.opacity(0.4),
+                                    Theme.panel.opacity(0.6),
                                     Color.clear
                                 ]),
                                 startPoint: .leading,
@@ -1088,8 +1067,8 @@ struct TranscriptionView: View {
             while let range = text.range(of: query, options: searchOptions, range: searchStartIndex..<text.endIndex) {
                 guard !Task.isCancelled else { return }
                 if let attributedRange = Range(range, in: attributedString) {
-                    attributedString[attributedRange].backgroundColor = .yellow
-                    attributedString[attributedRange].foregroundColor = .black
+                    attributedString[attributedRange].backgroundColor = Theme.amber.opacity(0.35)
+                    attributedString[attributedRange].foregroundColor = Theme.text
                 }
                 searchStartIndex = range.upperBound
             }
@@ -1130,7 +1109,7 @@ struct TranscriptionView: View {
                                 .lineLimit(3)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .textSelection(.enabled)
-                                .foregroundColor(.primary)
+                                .foregroundColor(Theme.text)
                         }
                         .buttonStyle(.plain)
                     } else {
@@ -1150,9 +1129,10 @@ struct TranscriptionView: View {
                         Text(isExpanded ? "Show less" : "Show more")
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                     }
-                    .foregroundColor(ThemePalette.linkText(colorScheme))
+                    .foregroundColor(Theme.accent)
                     .font(.footnote)
                 }
+                .buttonStyle(.themeLink)
                 .padding(.horizontal, 8)
                 .padding(.bottom, 8)
             }
@@ -1191,14 +1171,9 @@ struct MicrophonePickerIconView: View {
         }) {
             Image(systemName: microphoneService.availableMicrophones.isEmpty ? "mic.slash" : "mic.fill")
                 .font(.title3)
-                .foregroundColor(.secondary)
+                .foregroundColor(Theme.mutedText)
                 .frame(width: 32, height: 32)
-                .background(ThemePalette.panelSurface(colorScheme))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(ThemePalette.panelBorder(colorScheme), lineWidth: 1)
-                )
-                .cornerRadius(8)
+                .themePanel()
         }
         .buttonStyle(.plain)
         .help(microphoneService.currentMicrophone?.displayName ?? "Select microphone")
@@ -1206,7 +1181,7 @@ struct MicrophonePickerIconView: View {
             VStack(alignment: .leading, spacing: 0) {
                 if microphoneService.availableMicrophones.isEmpty {
                     Text("No microphones available")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Theme.mutedText)
                         .padding()
                 } else {
                     ForEach(builtInMicrophones) { microphone in
@@ -1265,43 +1240,10 @@ struct MainRecordButton: View {
     let isRecording: Bool
     @Environment(\.colorScheme) private var colorScheme
 
-    private var buttonColor: Color {
-        ThemePalette.recordButtonBase(colorScheme)
-    }
-
     var body: some View {
         Circle()
-            .fill(
-                LinearGradient(
-                    colors: [
-                        isRecording ? Color.red.opacity(0.8) : buttonColor.opacity(0.8),
-                        isRecording ? Color.red : buttonColor.opacity(0.9)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
+            .fill(isRecording ? Theme.orangeRed : Theme.accent)
             .frame(width: 48, height: 48)
-            .shadow(
-                color: isRecording ? .red.opacity(0.5) : buttonColor.opacity(0.3),
-                radius: 12,
-                x: 0,
-                y: 0
-            )
-            .overlay {
-                Circle()
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                isRecording ? .red.opacity(0.6) : buttonColor.opacity(0.6),
-                                isRecording ? .red.opacity(0.3) : buttonColor.opacity(0.3)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-            }
             .scaleEffect(isRecording ? 0.9 : 1.0)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isRecording)
     }

@@ -6,6 +6,7 @@ upstream moves any anchor the script stops and names the file it could not
 patch, rather than producing a half-patched tree.
 """
 
+import re
 import shutil
 import subprocess
 import sys
@@ -50,7 +51,8 @@ PATCH_SENTINELS = {
 def patch(path: Path, anchor: str, replacement: str, label: str) -> None:
     text = path.read_text()
     sentinel = PATCH_SENTINELS.get(label)
-    if (replacement.strip() and replacement.strip() in text) or (sentinel is not None and sentinel in text):
+    applied = replacement.strip() and (replacement.strip() in text or themed(path, replacement).strip() in text)
+    if applied or (sentinel is not None and sentinel in text):
         print(f"  = {label}: already applied")
         return
     if text.count(anchor) != 1:
@@ -87,6 +89,7 @@ def add_engine_file() -> None:
         ("DictationFailure.swift", "Engines"),
         ("AuthTokenStore.swift", "Utils"),
         ("LocalCredentialStore.swift", "Utils"),
+        ("Theme.swift", "Utils"),
         ("CloudflareSetupView.swift", "Onboarding"),
     ):
         shutil.copyfile(ROOT / "src" / "client" / name, APP / subdir / name)
@@ -2100,6 +2103,318 @@ def patch_service_concurrency_warnings() -> None:
     )
 
 
+def literal(old: str, new: str, applied: str | None = None):
+    return (re.escape(old), new.replace("\\", "\\\\"), new if applied is None else applied)
+
+
+def insert_after(anchor: str, addition: str):
+    """Add text after anchor once. The lookahead keeps a rerun from adding it again."""
+    return (re.escape(anchor) + "(?!" + re.escape(addition) + ")",
+            (anchor + addition).replace("\\", "\\\\"), anchor + addition)
+
+
+# Generic color roles shared by every restyled upstream view. Each runs after
+# the file's specific edits, which pick their own colors first, and a file may
+# use only some of them.
+THEME_COMMON = [
+    literal(".foregroundColor(.secondary)", ".foregroundColor(Theme.mutedText)", ""),
+    literal(".foregroundStyle(.secondary)", ".foregroundStyle(Theme.mutedText)", ""),
+    literal(".foregroundColor(.primary)", ".foregroundColor(Theme.text)", ""),
+    literal(".foregroundColor(.orange)", ".foregroundColor(Theme.amber)", ""),
+    literal(".foregroundStyle(.orange)", ".foregroundStyle(Theme.amber)", ""),
+    literal(".foregroundColor(.green)", ".foregroundColor(Theme.green)", ""),
+    literal(".foregroundStyle(.green)", ".foregroundStyle(Theme.green)", ""),
+    literal(".foregroundStyle(.red)", ".foregroundStyle(Theme.orangeRed)", ""),
+    literal("SwitchToggleStyle(tint: Color.accentColor)", "SwitchToggleStyle(tint: Theme.accent)", ""),
+    literal(".buttonStyle(.link)", ".buttonStyle(.themeLink)", ""),
+]
+
+
+def theme_edits() -> dict:
+    """Per file: a label and its edits, in order.
+
+    An edit is (regex, replacement, applied). applied is text that exists only
+    once the edit has run, so a rerun skips the edit instead of failing.
+    """
+    icon_button = r"""\.background\(ThemePalette\.panelSurface\(colorScheme\)\)
+\s*\.overlay\(
+\s*RoundedRectangle\(cornerRadius: 8\)
+\s*\.stroke\(ThemePalette\.panelBorder\(colorScheme\), lineWidth: 1\)
+\s*\)
+\s*\.cornerRadius\(8\)"""
+    content = [
+        (r"""\.background\(ThemePalette\.panelSurface\(colorScheme\)\)
+\s*\.overlay\(
+\s*RoundedRectangle\(cornerRadius: 20\)
+\s*\.stroke\(ThemePalette\.panelBorder\(colorScheme\), lineWidth: 1\)
+\s*\)
+\s*\.cornerRadius\(20\)""", ".themePanel()", 'TextField("Search in transcriptions", text: $searchText)'),
+        (icon_button, ".themePanel()", ".themePanel()"),
+        literal("""        .background(ThemePalette.panelSurface(colorScheme))
+        .cornerRadius(10)""", "        .themePanel()"),
+        literal("""            .background(ThemePalette.cardBackground(colorScheme))
+        }
+        .background(ThemePalette.cardBackground(colorScheme))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(ThemePalette.cardBorder(colorScheme), lineWidth: 1)
+        )""", """            .background(Theme.panel)
+        }
+        .themePanel()"""),
+        literal("ThemePalette.windowBackground(colorScheme)", "Theme.background", "Theme.background"),
+        literal(".foregroundColor(isPlaying ? .red : ThemePalette.iconAccent(colorScheme))",
+                ".foregroundColor(isPlaying ? Theme.orangeRed : Theme.accent)"),
+        literal(""".foregroundColor(ThemePalette.linkText(colorScheme))
+                    .font(.footnote)
+                }""", """.foregroundColor(Theme.accent)
+                    .font(.footnote)
+                }
+                .buttonStyle(.themeLink)"""),
+        literal(".foregroundColor(isGranted ? .green : .red)", ".foregroundColor(isGranted ? Theme.green : Theme.orangeRed)"),
+        literal(".foregroundColor(.red)", ".foregroundColor(Theme.orangeRed)", "Theme.orangeRed"),
+        literal(".stroke(Color.secondary.opacity(0.2), lineWidth: 2)", ".stroke(Theme.line, lineWidth: 2)"),
+        literal(".stroke(Color.secondary, style: StrokeStyle(lineWidth: 2, lineCap: .round))",
+                ".stroke(Theme.amber, style: StrokeStyle(lineWidth: 2, lineCap: .round))"),
+        literal(".background(Color.secondary.opacity(0.2))", ".background(Theme.border)"),
+        literal(".fill(Color.secondary.opacity(0.08))", ".fill(Theme.line.opacity(0.3))"),
+        literal("Color.white.opacity(0.4),", "Theme.panel.opacity(0.6),"),
+        literal("""                    attributedString[attributedRange].backgroundColor = .yellow
+                    attributedString[attributedRange].foregroundColor = .black""",
+                """                    attributedString[attributedRange].backgroundColor = Theme.amber.opacity(0.35)
+                    attributedString[attributedRange].foregroundColor = Theme.text"""),
+        literal("""    private var buttonColor: Color {
+        ThemePalette.recordButtonBase(colorScheme)
+    }
+
+    var body: some View {
+        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [
+                        isRecording ? Color.red.opacity(0.8) : buttonColor.opacity(0.8),
+                        isRecording ? Color.red : buttonColor.opacity(0.9)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(width: 48, height: 48)
+            .shadow(
+                color: isRecording ? .red.opacity(0.5) : buttonColor.opacity(0.3),
+                radius: 12,
+                x: 0,
+                y: 0
+            )
+            .overlay {
+                Circle()
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                isRecording ? .red.opacity(0.6) : buttonColor.opacity(0.6),
+                                isRecording ? .red.opacity(0.3) : buttonColor.opacity(0.3)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            }
+            .scaleEffect""", """    var body: some View {
+        Circle()
+            .fill(isRecording ? Theme.orangeRed : Theme.accent)
+            .frame(width: 48, height: 48)
+            .scaleEffect"""),
+        (r"enum ThemePalette \{\n.*?\n\}\n\n", "", "Theme.panel"),
+        *THEME_COMMON,
+    ]
+    settings = [
+        literal("""        .frame(width: sheetSize.width, height: sheetSize.height)
+        .background(Color(.windowBackgroundColor))""", """        .frame(width: sheetSize.width, height: sheetSize.height)
+        .foregroundStyle(Theme.text)
+        .tint(Theme.accent)
+        .background(Theme.background)"""),
+        literal(".background(Color(.windowBackgroundColor))", ".background(Theme.background)", ".background(Theme.background)"),
+        (r"\.background\(Color\(\.controlBackgroundColor\)\.opacity\(0\.3\)\)\n\s*\.cornerRadius\(12\)", ".themePanel()", ".themePanel()"),
+        (r"\.background\(Color\(\.textBackgroundColor\)\.opacity\(0\.5\)\)\n\s*\.cornerRadius\([68]\)", ".themeRow()", ".themeRow()"),
+        (r"\.background\(Color\(\.controlBackgroundColor\)\)\n\s*\.cornerRadius\(8\)", ".themeRow()", ".themeRow()"),
+        (r"\.background\(isSelected \? Color\(\.controlBackgroundColor\)\.opacity\(0\.7\) : Color\(\.controlBackgroundColor\)\.opacity\(0\.5\)\)\n\s*\.cornerRadius\(8\)",
+         ".themeRow(selected: isSelected)", ".themeRow(selected: isSelected)"),
+        (r"""\.background\(Color\(\.textBackgroundColor\)\)
+(\s*)\.cornerRadius\(8\)
+\s*\.overlay\(
+\s*RoundedRectangle\(cornerRadius: 8\)
+\s*\.stroke\(Color\.gray\.opacity\(0\.3\), lineWidth: 1\)
+\s*\)""", r".scrollContentBackground(.hidden)\n\1.themeRow()", ".scrollContentBackground(.hidden)"),
+        (r"""(Text\((?:String\(format: "%\.2f", viewModel\.(?:temperature|noSpeechThreshold)\)|ByteCountFormatter\.string\(fromByteCount: diskUsage, countStyle: \.file\))\)
+\s*\.font\(\.subheadline\)
+\s*)\.foregroundColor\(\.secondary\)""", r"\1.foregroundColor(Theme.violet)", "Theme.violet"),
+        *THEME_COMMON,
+    ]
+    indicator = [
+        literal("""        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [
+                        Color.red.opacity(0.8),
+                        Color.red
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(width: 8, height: 8)
+            .shadow(color: .red.opacity(0.5), radius: 4)
+            .opacity(isBlinking ? 0.3 : 1.0)
+            .animation(.easeInOut(duration: 0.4), value: isBlinking)""", """        HStack(spacing: 6) {
+            Circle()
+                .fill(Theme.orangeRed)
+                .frame(width: 8, height: 8)
+                .opacity(isBlinking ? 0.3 : 1.0)
+
+            // Moves with the blink timer, which runs only while recording.
+            HStack(spacing: 2) {
+                ForEach(Self.waveHeights.indices, id: \\.self) { index in
+                    let heights = Self.waveHeights[index]
+                    Capsule()
+                        .fill(Theme.orangeRed)
+                        .frame(width: 2, height: isBlinking ? heights.1 : heights.0)
+                }
+            }
+            .frame(height: 14)
+        }
+        .animation(.easeInOut(duration: 0.4), value: isBlinking)"""),
+        insert_after("""struct RecordingIndicator: View {
+    let isBlinking: Bool
+""", """    private static let waveHeights: [(CGFloat, CGFloat)] = [(4, 10), (10, 5), (14, 8), (7, 14), (4, 9)]
+"""),
+        literal("""                    RecordingIndicator(isBlinking: viewModel.isBlinking)
+                        .frame(width: 24)""", """                    RecordingIndicator(isBlinking: viewModel.isBlinking)
+                        .fixedSize()"""),
+        literal("""    private var backgroundColor: Color {
+        colorScheme == .dark
+            ? Color.black.opacity(0.24)
+            : Color.white.opacity(0.24)
+    }""", """    /// Recording is outlined orange-red, transcribing and notices amber.
+    private var outlineColor: Color {
+        switch viewModel.state {
+        case .recording: Theme.orangeRed
+        case .decoding, .busy, .noMicrophone: Theme.amber
+        default: Theme.line
+        }
+    }"""),
+        literal("""        .background {
+            rect
+                .fill(backgroundColor)
+                .background {
+                    rect
+                        .fill(Material.thinMaterial)
+                }
+        }""", """        .foregroundStyle(Theme.text)
+        .background {
+            rect.fill(Theme.panel)
+            rect.strokeBorder(outlineColor, lineWidth: 1)
+        }"""),
+        literal(".fill(Color.orange)", ".fill(Theme.amber)"),
+        *THEME_COMMON,
+    ]
+    selected_card = r"""\.fill\(isSelected \? Color\(\.controlBackgroundColor\)\.opacity\(0\.8\) : Color\(\.controlBackgroundColor\)\.opacity\(0\.5\)\)
+\s*\.shadow\(color: isSelected \? Color\.blue\.opacity\(0\.2\) : Color\.black\.opacity\(0\.05\), radius: isSelected \? 8 : 4, x: 0, y: 2\)"""
+    onboarding = [
+        literal("""                        .foregroundStyle(
+                            .white
+                        )""", """                        .foregroundStyle(Theme.text)"""),
+        literal("""            .background(
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(0.05),
+                        Color.white.opacity(0.03),
+                        Color.clear
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )""", "            .background(Theme.panel)"),
+        literal("""        .background(
+            ZStack {
+                Color(.windowBackgroundColor)
+                
+                // Subtle gradient overlay
+                LinearGradient(
+                    colors: [
+                        Color.blue.opacity(0.02),
+                        Color.clear,
+                        Color.purple.opacity(0.02)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            }
+        )""", """        .foregroundStyle(Theme.text)
+        .background(Theme.background)"""),
+        (selected_card, ".fill(Theme.panel)", ".fill(Theme.panel)"),
+        literal(".stroke(isSelected ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1.5)",
+                ".stroke(isSelected ? Theme.accent : Theme.border, lineWidth: 1)", "isSelected ? Theme.accent : Theme.border"),
+        literal(".fill(highlighted ? Color.accentColor.opacity(0.35) : Color(.controlBackgroundColor).opacity(0.5))",
+                ".fill(highlighted ? Theme.accent.opacity(0.3) : Theme.panel)"),
+        literal(".stroke(highlighted ? Color.accentColor.opacity(0.7) : Color.white.opacity(0.08), lineWidth: 1)",
+                ".stroke(highlighted ? Theme.accent : Theme.border, lineWidth: 1)"),
+        literal(".foregroundColor(highlighted ? .white : .secondary)", ".foregroundColor(highlighted ? Theme.text : Theme.mutedText)"),
+        literal(".fill(Color(.controlBackgroundColor).opacity(0.3))", ".fill(Theme.panel)"),
+        literal(".foregroundColor(Color(.tertiaryLabelColor))", ".foregroundColor(Theme.mutedText)"),
+        *THEME_COMMON,
+    ]
+    drop_overlay = [
+        literal("Color(NSColor.windowBackgroundColor)", "Theme.background"),
+        literal(".foregroundColor(.accentColor)", ".foregroundColor(Theme.accent)"),
+        *THEME_COMMON,
+    ]
+    app = [
+        insert_after("""            .frame(minHeight: 400, maxHeight: 900)
+""", """            .foregroundStyle(Theme.text)
+            .tint(Theme.accent)
+            .background(Theme.background)
+"""),
+        insert_after("""        window.maxSize = NSSize(width: 450, height: 900)
+""", """        window.backgroundColor = Theme.NSColors.background
+"""),
+    ]
+    return {
+        "ContentView.swift": ("Theme: main window", content),
+        "Settings.swift": ("Theme: settings", settings),
+        "Indicator/IndicatorWindow.swift": ("Theme: recording indicator", indicator),
+        "Onboarding/OnboardingView.swift": ("Theme: onboarding", onboarding),
+        "FileDropHandler.swift": ("Theme: drop overlay", drop_overlay),
+        "OpenSuperWhisperApp.swift": ("Theme: app windows", app),
+    }
+
+
+def themed(path: Path, text: str) -> str:
+    """text as the theme pass leaves it, so an earlier patch whose
+    replacement was later restyled still reads as applied."""
+    try:
+        name = str(path.relative_to(APP))
+    except ValueError:
+        return text
+    for pattern, replacement, _ in theme_edits().get(name, ("", []))[1]:
+        text = re.sub(pattern, replacement, text)
+    return text
+
+
+def patch_theme() -> None:
+    """Flat warm theme: Theme.swift colors in place of system and literal ones."""
+    for name, (label, edits) in theme_edits().items():
+        path = APP / name
+        text = path.read_text()
+        for pattern, replacement, applied in edits:
+            updated, count = re.subn(pattern, replacement, text)
+            if count:
+                text = updated
+            elif applied not in text:
+                raise PatchError(f"{label}: no match for {pattern!r} in {path.name}")
+        path.write_text(text)
+        print(f"  + {label}")
+
 def main() -> int:
     clone()
     print("Patching:")
@@ -2124,6 +2439,7 @@ def main() -> int:
         patch_local_engine_tab()
         patch_dictation_deadline()
         patch_service_concurrency_warnings()
+        patch_theme()
     except PatchError as err:
         print(f"\nFAILED: {err}", file=sys.stderr)
         print("Upstream changed. Fix the anchor in this script and rerun.", file=sys.stderr)

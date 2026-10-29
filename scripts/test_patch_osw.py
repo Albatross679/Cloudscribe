@@ -39,6 +39,7 @@ with tempfile.TemporaryDirectory(prefix="osw-patch-tests-") as directory:
         patcher.patch_failure_paths, patcher.patch_content_view, patcher.patch_usage_metrics,
         patcher.patch_openrouter_prices, patcher.patch_local_engine_tab,
         patcher.patch_dictation_deadline, patcher.patch_service_concurrency_warnings,
+        patcher.patch_theme,
     ]
     def snapshot():
         return {str(p.relative_to(patcher.APP)): hashlib.sha256(p.read_bytes()).hexdigest()

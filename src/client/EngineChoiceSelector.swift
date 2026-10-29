@@ -117,7 +117,7 @@ struct EngineChoiceSelector: View {
                 if selection.localSelection == nil {
                     Text("Pick Parakeet or Whisper to run dictation on this Mac. No local model is downloaded before you pick one.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Theme.mutedText)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -125,7 +125,7 @@ struct EngineChoiceSelector: View {
             Label(selection.choice.dictationSummary(modelLabel: cloudModelLabel),
                   systemImage: selection.choice.isLocal ? "laptopcomputer" : "cloud")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(Theme.mutedText)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -139,6 +139,31 @@ struct EngineChoiceSelector: View {
 /// the engine when it landed on a segment.
 final class FocusClickSafeSegmentedControl: NSSegmentedControl {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { false }
+
+    /// Separate flat tabs, the selected one outlined in the accent color.
+    /// Each tab is drawn inside its own equal-width segment, so clicks still
+    /// land on the segment that is drawn there.
+    override func draw(_ dirtyRect: NSRect) {
+        guard segmentCount > 0 else { return }
+        let slot = bounds.width / CGFloat(segmentCount)
+        for index in 0..<segmentCount {
+            let selected = index == selectedSegment
+            let rect = NSRect(x: CGFloat(index) * slot, y: 0, width: slot, height: bounds.height)
+                .insetBy(dx: segmentCount > 1 ? 4 : 0, dy: 0)
+                .insetBy(dx: 0.5, dy: 0.5)
+            let outline = NSBezierPath(roundedRect: rect, xRadius: Theme.rowCornerRadius, yRadius: Theme.rowCornerRadius)
+            outline.lineWidth = 1
+            (selected ? Theme.NSColors.accent : Theme.NSColors.line).setStroke()
+            outline.stroke()
+
+            let label = NSAttributedString(string: label(forSegment: index) ?? "", attributes: [
+                .font: NSFont.systemFont(ofSize: NSFont.systemFontSize, weight: selected ? .medium : .regular),
+                .foregroundColor: selected ? Theme.NSColors.accent : Theme.NSColors.mutedText,
+            ])
+            let size = label.size()
+            label.draw(at: NSPoint(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2))
+        }
+    }
 }
 
 struct ClickSafeSegmentedPicker<Value: Hashable>: NSViewRepresentable {

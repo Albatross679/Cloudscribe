@@ -38,6 +38,7 @@ swiftc -typecheck \
   "$ROOT/src/client/CloudProvider.swift" \
   "$ROOT/src/client/OpenRouterRequest.swift" \
   "$ROOT/src/client/OpenRouterPricing.swift" \
+  "$ROOT/src/client/Theme.swift" \
   "$ROOT/src/client/OpenRouterPriceView.swift"
 
 swiftc -O -o "$OUT/test_local_credentials" \

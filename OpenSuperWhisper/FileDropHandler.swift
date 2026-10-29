@@ -57,18 +57,18 @@ struct FileDropOverlay: ViewModifier {
             .overlay {
                 if handler.isDragging {
                     ZStack {
-                        Color(NSColor.windowBackgroundColor)
+                        Theme.background
                             .opacity(0.95)
                         VStack(spacing: 16) {
                             Image(systemName: "arrow.down.circle")
                                 .font(.system(size: 48))
-                                .foregroundColor(.accentColor)
+                                .foregroundColor(Theme.accent)
                                 .symbolEffect(.bounce, value: handler.isDragging)
                             Text("Drop audio files to transcribe")
                                 .font(.headline)
                             Text("Multiple files will be queued")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.mutedText)
                         }
                     }
                     .ignoresSafeArea()
