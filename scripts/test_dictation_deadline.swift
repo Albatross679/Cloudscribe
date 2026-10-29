@@ -140,6 +140,12 @@ final class OpenRouterStub: URLProtocol {
         precondition(elapsed >= limit && elapsed < limit + .seconds(1), "deadline fired after \(elapsed)")
         precondition(!service.isTranscribing, "service still reports transcribing after the deadline")
         precondition((outcome as? LocalizedError)?.errorDescription?.contains("8 seconds") == true)
+        // The indicator's count and outline run on the same deadline and are
+        // full when the deadline error arrives.
+        var indicatorClock = TranscribingClock(deadline: start + limit, limit: limit)
+        indicatorClock.tick()
+        precondition(indicatorClock.progress() == 1 && indicatorClock.remaining() == .zero, "outline not full at the deadline")
+        precondition(indicatorClock.seconds == Int(limit.components.seconds), "count went past the limit: \(indicatorClock.seconds)")
         try await waitUntil { OpenRouterStub.counts.stopped == 1 }
         precondition(OpenRouterStub.counts == (1, 1), "the in-flight request was not cancelled: \(OpenRouterStub.counts)")
         print("PASS a request that never answers is cancelled at the deadline, after \(elapsed)")

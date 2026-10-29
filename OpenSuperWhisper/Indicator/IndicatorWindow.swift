@@ -9,6 +9,7 @@ enum RecordingState {
     case decoding
     case busy
     case noMicrophone
+    case timedOut
 }
 
 @MainActor
@@ -26,6 +27,9 @@ class IndicatorViewModel: ObservableObject {
     @Published var isBlinking = false
     @Published var isConfirmingCancel = false
     @Published var recorder: AudioRecorder = .shared
+    /// Counts while hotkey dictation transcribes, nil before that.
+    @Published private(set) var transcribing: TranscribingClock?
+    private var transcribingTimer: Timer?
     
     var recordingStartedAt: Date?
     
@@ -160,6 +164,7 @@ class IndicatorViewModel: ObservableObject {
         
         state = .decoding
         let deadline = ContinuousClock.now + TranscriptionService.dictationDeadline
+        startTranscribingClock(deadline: deadline)
         
         Task { [weak self] in
             guard let self = self else { return }
@@ -200,9 +205,17 @@ class IndicatorViewModel: ObservableObject {
                     }
                 } catch {
                     await DictationFailure.record(audioAt: tempURL, error: error, recordingID: metricID)
+                    if error is DictationDeadlineExceeded {
+                        await MainActor.run {
+                            self.stopTranscribingClock()
+                            self.showAutoDismissingMessage(.timedOut)
+                        }
+                        return
+                    }
                 }
                 
                 await MainActor.run {
+                    self.stopTranscribingClock()
                     self.delegate?.didFinishDecoding()
                 }
             } else {
@@ -213,6 +226,22 @@ class IndicatorViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    private func startTranscribingClock(deadline: ContinuousClock.Instant) {
+        transcribing = TranscribingClock(deadline: deadline, limit: TranscriptionService.dictationDeadline)
+        transcribingTimer?.invalidate()
+        transcribingTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.transcribing?.tick()
+            }
+        }
+    }
+
+    /// Keeps the count where it is once the result arrives or the deadline fires.
+    private func stopTranscribingClock() {
+        transcribingTimer?.invalidate()
+        transcribingTimer = nil
     }
     
     func insertText(_ text: String) {
@@ -264,6 +293,7 @@ class IndicatorViewModel: ObservableObject {
 
     func cleanup() {
         stopBlinking()
+        stopTranscribingClock()
         resetCancelConfirmation()
         recordingStartedAt = nil
         hideTimer?.invalidate()
@@ -331,7 +361,9 @@ struct IndicatorWindow: View {
     /// so the appear offset (moves the card down) and the spring overshoot
     /// need margins, otherwise the card edges are visibly clipped mid-animation.
     static let cardSize = CGSize(width: 200, height: 36)
-    static let windowSize = CGSize(width: 256, height: 96)
+    /// The timed out message does not fit the normal card.
+    static let timedOutCardWidth: CGFloat = 264
+    static let windowSize = CGSize(width: 320, height: 96)
     static let appearOffset: CGFloat = 20
     static let appearInitialScale: CGFloat = 0.5
     
@@ -342,7 +374,7 @@ struct IndicatorWindow: View {
     private var outlineColor: Color {
         switch viewModel.state {
         case .recording: Theme.orangeRed
-        case .decoding, .busy, .noMicrophone: Theme.amber
+        case .decoding, .busy, .noMicrophone, .timedOut: Theme.amber
         default: Theme.line
         }
     }
@@ -389,8 +421,8 @@ struct IndicatorWindow: View {
                         .scaleEffect(0.7)
                         .frame(width: 24)
                     
-                    Text("Transcribing...")
-                        .font(.system(size: 13, weight: .semibold))
+                    Text(viewModel.transcribing?.label ?? "Transcribing...")
+                        .font(.system(size: 13, weight: .semibold).monospacedDigit())
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
@@ -418,6 +450,18 @@ struct IndicatorWindow: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
+            case .timedOut:
+                HStack(spacing: 8) {
+                    Image(systemName: "clock.badge.exclamationmark")
+                        .foregroundColor(Theme.amber)
+                        .frame(width: 24)
+
+                    Text(TranscribingClock.timeoutMessage)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(Theme.amber)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
             case .idle:
                 EmptyView()
             }
@@ -429,13 +473,18 @@ struct IndicatorWindow: View {
             rect.fill(Theme.panel)
             rect.strokeBorder(outlineColor, lineWidth: 1)
         }
+        .overlay {
+            if let clock = viewModel.transcribing, viewModel.state == .decoding || viewModel.state == .timedOut {
+                TranscribingProgressOutline(clock: clock, cornerRadius: rect.cornerSize.width)
+            }
+        }
         .overlay(alignment: .bottom) {
             if viewModel.isConfirmingCancel {
                 CancelConfirmationBar()
             }
         }
         .clipShape(rect)
-        .frame(width: Self.cardSize.width)
+        .frame(width: viewModel.state == .timedOut ? Self.timedOutCardWidth : Self.cardSize.width)
         // The ideal size of the root view must match the panel: NSHostingView
         // resizes the window down to SwiftUI's ideal size, and a window sized
         // to the bare card clips the appear offset, bounce overshoot and shadow.

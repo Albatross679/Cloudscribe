@@ -18,6 +18,9 @@ class IndicatorWindowManager: IndicatorViewDelegate {
         NotificationCenter.default.post(name: .indicatorWindowWillShow, object: nil)
         KeyboardShortcuts.enable(.escape)
         
+        // A notice from the previous session (busy, timed out) may still be
+        // up, and its dismiss timer must not hide the new session.
+        viewModel?.cleanup()
         let newViewModel = IndicatorViewModel()
         newViewModel.delegate = self
         viewModel = newViewModel

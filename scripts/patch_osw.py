@@ -45,6 +45,7 @@ PATCH_SENTINELS = {
     "Usage: service identity": "                         deadline: ContinuousClock.Instant? = nil) async throws -> String {",
     "Usage: run completion": "        } catch let error as DictationDeadlineExceeded {",
     "Usage: Indicator/IndicatorWindow.swift service identity": "metricID: metricID, deadline: deadline)",
+    "Deadline: start at key release": "        let deadline = ContinuousClock.now + TranscriptionService.dictationDeadline\n",
 }
 
 
@@ -87,6 +88,7 @@ def add_engine_file() -> None:
         ("UsageDashboard.swift", "Engines"),
         ("EngineChoiceSelector.swift", "Engines"),
         ("DictationFailure.swift", "Engines"),
+        ("TranscribingClock.swift", "Indicator"),
         ("AuthTokenStore.swift", "Utils"),
         ("LocalCredentialStore.swift", "Utils"),
         ("Theme.swift", "Utils"),
@@ -2037,6 +2039,119 @@ private final class DeadlineRace: @unchecked Sendable {
     )
 
 
+def patch_transcribing_timer() -> None:
+    """Show how long hotkey dictation has been transcribing.
+
+    The indicator counts the seconds since the dictation deadline started and
+    fills its outline in amber over the same limit, so the cutoff is visible
+    before it arrives. When the deadline fires it says the audio was kept in
+    history for about 2 seconds instead of just disappearing.
+    """
+    path = APP / "Indicator/IndicatorWindow.swift"
+    patch(path, """    case noMicrophone
+}""", """    case noMicrophone
+    case timedOut
+}""", "Timer: timed out state")
+    patch(path, """    @Published var recorder: AudioRecorder = .shared
+""", """    @Published var recorder: AudioRecorder = .shared
+    /// Counts while hotkey dictation transcribes, nil before that.
+    @Published private(set) var transcribing: TranscribingClock?
+    private var transcribingTimer: Timer?
+""", "Timer: view model clock")
+    patch(path, """        let deadline = ContinuousClock.now + TranscriptionService.dictationDeadline
+""", """        let deadline = ContinuousClock.now + TranscriptionService.dictationDeadline
+        startTranscribingClock(deadline: deadline)
+""", "Timer: start with the deadline")
+    patch(path, """                } catch {
+                    await DictationFailure.record(audioAt: tempURL, error: error, recordingID: metricID)
+                }
+                
+                await MainActor.run {
+                    self.delegate?.didFinishDecoding()
+                }""", """                } catch {
+                    await DictationFailure.record(audioAt: tempURL, error: error, recordingID: metricID)
+                    if error is DictationDeadlineExceeded {
+                        await MainActor.run {
+                            self.stopTranscribingClock()
+                            self.showAutoDismissingMessage(.timedOut)
+                        }
+                        return
+                    }
+                }
+                
+                await MainActor.run {
+                    self.stopTranscribingClock()
+                    self.delegate?.didFinishDecoding()
+                }""", "Timer: stop on result or deadline")
+    patch(path, """    func insertText(_ text: String) {""", """    private func startTranscribingClock(deadline: ContinuousClock.Instant) {
+        transcribing = TranscribingClock(deadline: deadline, limit: TranscriptionService.dictationDeadline)
+        transcribingTimer?.invalidate()
+        transcribingTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.transcribing?.tick()
+            }
+        }
+    }
+
+    /// Keeps the count where it is once the result arrives or the deadline fires.
+    private func stopTranscribingClock() {
+        transcribingTimer?.invalidate()
+        transcribingTimer = nil
+    }
+    
+    func insertText(_ text: String) {""", "Timer: clock updates")
+    patch(path, """    func cleanup() {
+        stopBlinking()
+""", """    func cleanup() {
+        stopBlinking()
+        stopTranscribingClock()
+""", "Timer: stop on cleanup")
+    patch(path, """                    Text("Transcribing...")
+                        .font(.system(size: 13, weight: .semibold))""", """                    Text(viewModel.transcribing?.label ?? "Transcribing...")
+                        .font(.system(size: 13, weight: .semibold).monospacedDigit())""",
+          "Timer: elapsed seconds")
+    patch(path, """            case .idle:
+                EmptyView()""", """            case .timedOut:
+                HStack(spacing: 8) {
+                    Image(systemName: "clock.badge.exclamationmark")
+                        .foregroundColor(Theme.amber)
+                        .frame(width: 24)
+
+                    Text(TranscribingClock.timeoutMessage)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(Theme.amber)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            case .idle:
+                EmptyView()""", "Timer: timed out message")
+    patch(path, """        .overlay(alignment: .bottom) {
+            if viewModel.isConfirmingCancel {""", """        .overlay {
+            if let clock = viewModel.transcribing, viewModel.state == .decoding || viewModel.state == .timedOut {
+                TranscribingProgressOutline(clock: clock, cornerRadius: rect.cornerSize.width)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if viewModel.isConfirmingCancel {""", "Timer: progress outline")
+    patch(path, """    static let cardSize = CGSize(width: 200, height: 36)
+    static let windowSize = CGSize(width: 256, height: 96)""", """    static let cardSize = CGSize(width: 200, height: 36)
+    /// The timed out message does not fit the normal card.
+    static let timedOutCardWidth: CGFloat = 264
+    static let windowSize = CGSize(width: 320, height: 96)""", "Timer: wider window")
+    patch(path, """        .clipShape(rect)
+        .frame(width: Self.cardSize.width)""", """        .clipShape(rect)
+        .frame(width: viewModel.state == .timedOut ? Self.timedOutCardWidth : Self.cardSize.width)""",
+          "Timer: timed out card width")
+
+    path = APP / "Indicator/IndicatorWindowManager.swift"
+    patch(path, """        let newViewModel = IndicatorViewModel()
+        newViewModel.delegate = self""", """        // A notice from the previous session (busy, timed out) may still be
+        // up, and its dismiss timer must not hide the new session.
+        viewModel?.cleanup()
+        let newViewModel = IndicatorViewModel()
+        newViewModel.delegate = self""", "Timer: new session ends the previous notice")
+
+
 def patch_service_concurrency_warnings() -> None:
     """Clear the Swift 6 warnings the service compiled with."""
     path = APP / "TranscriptionService.swift"
@@ -2299,7 +2414,7 @@ def theme_edits() -> dict:
     private var outlineColor: Color {
         switch viewModel.state {
         case .recording: Theme.orangeRed
-        case .decoding, .busy, .noMicrophone: Theme.amber
+        case .decoding, .busy, .noMicrophone, .timedOut: Theme.amber
         default: Theme.line
         }
     }"""),
@@ -2440,6 +2555,7 @@ def main() -> int:
         patch_dictation_deadline()
         patch_service_concurrency_warnings()
         patch_theme()
+        patch_transcribing_timer()
     except PatchError as err:
         print(f"\nFAILED: {err}", file=sys.stderr)
         print("Upstream changed. Fix the anchor in this script and rerun.", file=sys.stderr)

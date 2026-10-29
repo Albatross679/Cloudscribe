@@ -29,6 +29,9 @@ swiftc -typecheck "$ROOT/src/client/UsageMetrics.swift" "$ROOT/src/client/Theme.
 swiftc -parse-as-library -o "$OUT/test_presentation" \
   "$ROOT/src/client/UsageMetrics.swift" "$ROOT/src/client/Theme.swift" "$ROOT/src/client/UsageDashboard.swift" "$ROOT/scripts/test_usage_presentation.swift"
 "$OUT/test_presentation" "$OUT/presentation"
+swiftc -parse-as-library -o "$OUT/test_clock" \
+  "$ROOT/src/client/Theme.swift" "$ROOT/src/client/TranscribingClock.swift" "$ROOT/scripts/test_transcribing_clock.swift"
+"$OUT/test_clock"
 if [[ -f "$ROOT/OpenSuperWhisper/TranscriptionService.swift" ]]; then
   { printf 'import SwiftUI\n'; python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).read_text())' "$ROOT/OpenSuperWhisper/TranscriptionService.swift"; } > "$OUT/TranscriptionService.swift"
   swiftc -O -parse-as-library -o "$OUT/test_service" \
@@ -38,7 +41,8 @@ if [[ -f "$ROOT/OpenSuperWhisper/TranscriptionService.swift" ]]; then
     "$ROOT/src/client/UsageMetrics.swift" "$ROOT/src/client/CloudProvider.swift" \
     "$ROOT/src/client/CloudflareDirectRequest.swift" "$ROOT/src/client/HuggingFaceRequest.swift" \
     "$ROOT/src/client/OpenRouterRequest.swift" "$OUT/CloudflareClient.swift" \
-    "$OUT/TranscriptionService.swift" "$ROOT/scripts/test_dictation_deadline.swift"
+    "$OUT/TranscriptionService.swift" "$ROOT/src/client/Theme.swift" "$ROOT/src/client/TranscribingClock.swift" \
+    "$ROOT/scripts/test_dictation_deadline.swift"
   "$OUT/test_deadline" "$OUT"
   python3 "$ROOT/scripts/test_patch_osw.py"
 else
