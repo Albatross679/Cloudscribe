@@ -4,3 +4,8 @@
 [submodule "asian-autocorrect"]
 	path = asian-autocorrect
 	url = https://github.com/huacnlee/autocorrect
+[submodule "webrtc-audio-processing"]
+	path = webrtc-audio-processing
+	url = https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing.git
+	# Meson downloads abseil into its subprojects directory.
+	ignore = untracked

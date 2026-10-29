@@ -8,8 +8,9 @@
 | cmake | builds `libwhisper` | `brew install cmake` |
 | Rust | builds the `asian-autocorrect` dylib the bridging header imports | `curl https://sh.rustup.rs -sSf \| sh` |
 | libomp | linked by `libwhisper` | `brew install libomp` |
+| meson, ninja | build the `webrtc-audio-processing` echo canceller, linked statically | `brew install meson ninja` |
 
-All four are required even for a cloud-only build: the bridging header pulls in whisper.cpp and asian-autocorrect, so the local engine compiles regardless. This is a cost for whoever builds the app, not for whoever installs it.
+All of these are required even for a cloud-only build: the bridging header pulls in whisper.cpp and asian-autocorrect, so the local engine compiles regardless. This is a cost for whoever builds the app, not for whoever installs it.
 
 ## Signing
 
@@ -76,7 +77,9 @@ Builds stamp their own version and provenance into `Info.plist` (`CFBundleShortV
 
 ## Local regression tests
 
-`npm test` covers client encoders, stubbed HTTP, private local-file credential persistence, offline audio speed and the Settings engine choice without real credentials or paid requests. The engine choice test opens two small windows in its own never-activated process to check that a click which only focuses Settings cannot change the engine. After `python3 scripts/patch_osw.py`, run `scripts/test_shortcuts.sh` to test the actual pinned shortcut dispatch and mouse-event filtering with isolated test dependencies, plus fresh full patch generation, idempotent reruns and the engine selector contract. That command does not create event taps, post global input, record audio, or alter preferences. Installed hotkey permissions and physical recorder behavior still require a GUI check.
+`npm test` covers client encoders, stubbed HTTP, private local-file credential persistence, offline audio speed and the Settings engine choice without real credentials or paid requests. The engine choice test opens two small windows in its own never-activated process to check that a click which only focuses Settings cannot change the engine. After `python3 scripts/patch_osw.py`, run `scripts/test_shortcuts.sh` to test the actual pinned shortcut dispatch and mouse-event filtering with isolated test dependencies, plus fresh full patch generation, idempotent reruns and the engine selector contract. That command does not create event taps, post global input, record audio, or alter preferences. `scripts/test_echo_canceller.sh` builds the echo canceller and runs the production writer on a simulated speaker echo with a second talker, with no audio device or permission. Installed hotkey permissions and physical recorder behavior still require a GUI check.
+
+The echo canceller is the `webrtc-audio-processing` submodule, pinned at v2.1. `scripts/build_echo_canceller.sh` builds it with meson, together with the `src/native` C wrapper and the abseil it needs, into one static `build/libecho_canceller.a`, so the app ships no extra dylib. The first build downloads abseil through the submodule's hash-checked meson wrap.
 
 ## How the patching works
 

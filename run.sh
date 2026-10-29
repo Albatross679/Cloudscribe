@@ -13,6 +13,9 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
+echo "Building the echo canceller..."
+./scripts/build_echo_canceller.sh || { echo "Echo canceller build failed!"; exit 1; }
+
 echo "Building autocorrect-swift..."
 mkdir -p build
 CARGO_PROFILE_RELEASE_LTO=true \

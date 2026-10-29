@@ -415,6 +415,12 @@ class SettingsViewModel: ObservableObject {
             AppPreferences.shared.playSoundOnRecordStart = playSoundOnRecordStart
         }
     }
+
+    @Published var cancelSpeakerEcho: Bool {
+        didSet {
+            AppPreferences.shared.cancelSpeakerEcho = cancelSpeakerEcho
+        }
+    }
     
     @Published var useAsianAutocorrect: Bool {
         didSet {
@@ -512,6 +518,7 @@ class SettingsViewModel: ObservableObject {
         self.beamSize = prefs.beamSize
         self.debugMode = prefs.debugMode
         self.playSoundOnRecordStart = prefs.playSoundOnRecordStart
+        self.cancelSpeakerEcho = prefs.cancelSpeakerEcho
         self.useAsianAutocorrect = prefs.useAsianAutocorrect
         self.modifierOnlyHotkey = ModifierKey(rawValue: prefs.modifierOnlyHotkey) ?? .none
         self.mouseButtonHotkey = MouseButton(rawValue: prefs.mouseButtonHotkey) ?? .none
@@ -1929,6 +1936,20 @@ struct SettingsView: View {
                                 .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
                                 .labelsHidden()
                                 .help("Play a notification sound when recording begins")
+                        }
+
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Remove speaker sound")
+                                    .font(.subheadline)
+                                Text("Removes audio this Mac plays. Needs System Audio Recording access")
+                                    .font(.caption)
+                                    .foregroundColor(Theme.mutedText)
+                            }
+                            Spacer()
+                            Toggle("", isOn: $viewModel.cancelSpeakerEcho)
+                                .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
+                                .labelsHidden()
                         }
                         
                         HStack {

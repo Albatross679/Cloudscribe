@@ -26,7 +26,7 @@ cd Cloudscribe
 ./scripts/build_app.sh
 ```
 
-The build needs Xcode, cmake, Rust and libomp. It produces `build/Build/Products/Release/Cloudscribe.app`. Copy it to `/Applications/Cloudscribe.app`. See [docs/building.md](docs/building.md) for requirements, signing and packaging.
+The build needs Xcode, cmake, Rust, libomp, meson and ninja. It produces `build/Build/Products/Release/Cloudscribe.app`. Copy it to `/Applications/Cloudscribe.app`. See [docs/building.md](docs/building.md) for requirements, signing and packaging.
 
 The older 0.1.0 release is still available as a [DMG](https://github.com/Albatross679/cloud-dictation/releases/download/v0.1.0/OSW.Cloud.dmg) or with `brew install --cask albatross679/tap/osw-cloud`. It does not have the 0.2.0 changes listed in [docs/release-notes.md](docs/release-notes.md).
 
@@ -48,6 +48,12 @@ Cloudflare gives 10,000 neurons per day free on every plan. See [docs/models.md]
 - **Transcription > Language.** Nova-3 serves ten languages and errors on the rest. For anything else pick `whisper-turbo`.
 - **Transcription > Vocabulary.** A comma separated term list, not prose, for example `R2, Kubernetes, Workers AI`. It fixes proper nouns.
 - **Cloud provider > Audio speed.** Choose from `1` to `3` in steps of `0.25`. The default `1` uploads the original recording unchanged. Higher speeds keep pitch and cut billed audio minutes but lower accuracy, see [asr-compression-cost](https://github.com/Albatross679/asr-compression-cost).
+
+## Speaker sound
+
+Audio this Mac plays during a dictation, a video or a call, is removed from the recording, so it is not transcribed. WebRTC's echo canceller (AEC3) subtracts what the speakers played, taken from a Core Audio tap of system output, from the microphone. It is on by default under **Settings > Shortcuts > Recording Behavior > Remove speaker sound**.
+
+It needs macOS 14.2 and **System Audio Recording** access, under System Settings > Privacy & Security > Screen & System Audio Recording > System Audio Recording Only. Without that access, Core Audio delivers no audio to the canceller, so the app keeps the plain microphone recording it always made. The same happens whenever the canceller cannot start. Headphones need none of this.
 
 ## How keys are stored
 

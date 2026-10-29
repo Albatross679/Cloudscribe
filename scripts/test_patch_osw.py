@@ -40,6 +40,7 @@ with tempfile.TemporaryDirectory(prefix="osw-patch-tests-") as directory:
         patcher.patch_openrouter_prices, patcher.patch_local_engine_tab,
         patcher.patch_dictation_deadline, patcher.patch_service_concurrency_warnings,
         patcher.patch_theme, patcher.patch_transcribing_timer,
+        patcher.patch_echo_cancellation,
     ]
     def snapshot():
         return {str(p.relative_to(patcher.APP)): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -98,4 +99,15 @@ with tempfile.TemporaryDirectory(prefix="osw-patch-tests-") as directory:
     assert (patcher.APP / "Engines/OpenRouterPricing.swift").exists()
     for name in ('UsageMetrics.swift', 'UsageSelection.swift', 'UsageDashboard.swift', 'EngineChoiceSelector.swift'):
         assert (patcher.APP / 'Engines' / name).read_bytes() == (ROOT / 'src/client' / name).read_bytes()
-    print("PASS fresh full patch and idempotent rerun, local engine tab, credentials, original-duration metrics, retry identity and native dashboard")
+    recorder = (patcher.APP / "AudioRecorder.swift").read_text()
+    assert (patcher.APP / 'Utils/EchoCancellation.swift').read_bytes() == (ROOT / 'src/client/EchoCancellation.swift').read_bytes()
+    # The plain recorder still runs unchanged; the echo cancelled copy only
+    # replaces its file at stop, and every stop path settles the copy.
+    assert recorder.count('audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)') == 1
+    assert recorder.count('startEchoCancellation(microphone: activeMic, rawURL: fileURL)') == 1
+    assert recorder.count('discardEchoCancellation(echoStart)') == 3
+    assert recorder.count('finishEchoCancellation(') == 3
+    assert 'echoDuration >= rawDuration - Self.echoCoverageTolerance' in recorder
+    assert settings.count('Toggle("", isOn: $viewModel.cancelSpeakerEcho)') == 1
+    assert '@UserDefault(key: "cancelSpeakerEcho", defaultValue: true)' in (patcher.APP / "Utils/AppPreferences.swift").read_text()
+    print("PASS fresh full patch and idempotent rerun, local engine tab, credentials, original-duration metrics, retry identity, native dashboard and echo cancelled recording")

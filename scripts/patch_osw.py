@@ -88,6 +88,7 @@ def add_engine_file() -> None:
         ("UsageDashboard.swift", "Engines"),
         ("EngineChoiceSelector.swift", "Engines"),
         ("DictationFailure.swift", "Engines"),
+        ("EchoCancellation.swift", "Utils"),
         ("TranscribingClock.swift", "Indicator"),
         ("AuthTokenStore.swift", "Utils"),
         ("LocalCredentialStore.swift", "Utils"),
@@ -2230,6 +2231,173 @@ def patch_service_concurrency_warnings() -> None:
     )
 
 
+
+def patch_echo_cancellation() -> None:
+    """Remove speaker sound from dictation with WebRTC's echo canceller.
+
+    Beside the original AVAudioRecorder file, the recorder captures the
+    microphone and a tap of system output in one aggregate device
+    (Utils/EchoCancellation.swift) and writes the cleaned microphone. The
+    cleaned file replaces the plain one only if it covers the whole recording,
+    so the original path is the fallback when the setting is off, the tap
+    cannot start (older macOS) or Core Audio delivers nothing (System Audio
+    Recording access off or its prompt still open). The log says which ran.
+    """
+    path = APP / "Utils/AppPreferences.swift"
+    patch(path, """    @UserDefault(key: "playSoundOnRecordStart", defaultValue: false)
+    var playSoundOnRecordStart: Bool
+""", """    @UserDefault(key: "playSoundOnRecordStart", defaultValue: false)
+    var playSoundOnRecordStart: Bool
+
+    /// Removes audio the Mac plays from dictation recordings.
+    @UserDefault(key: "cancelSpeakerEcho", defaultValue: true)
+    var cancelSpeakerEcho: Bool
+""", "Echo: preference")
+
+    path = APP / "Settings.swift"
+    patch(path, """    @Published var playSoundOnRecordStart: Bool {
+        didSet {
+            AppPreferences.shared.playSoundOnRecordStart = playSoundOnRecordStart
+        }
+    }
+""", """    @Published var playSoundOnRecordStart: Bool {
+        didSet {
+            AppPreferences.shared.playSoundOnRecordStart = playSoundOnRecordStart
+        }
+    }
+
+    @Published var cancelSpeakerEcho: Bool {
+        didSet {
+            AppPreferences.shared.cancelSpeakerEcho = cancelSpeakerEcho
+        }
+    }
+""", "Echo: settings property")
+    patch(path, """        self.playSoundOnRecordStart = prefs.playSoundOnRecordStart
+""", """        self.playSoundOnRecordStart = prefs.playSoundOnRecordStart
+        self.cancelSpeakerEcho = prefs.cancelSpeakerEcho
+""", "Echo: settings initial value")
+    patch(path, """                                .help("Play a notification sound when recording begins")
+                        }
+""", """                                .help("Play a notification sound when recording begins")
+                        }
+
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Remove speaker sound")
+                                    .font(.subheadline)
+                                Text("Removes audio this Mac plays. Needs System Audio Recording access")
+                                    .font(.caption)
+                                    .foregroundColor(Theme.mutedText)
+                            }
+                            Spacer()
+                            Toggle("", isOn: $viewModel.cancelSpeakerEcho)
+                                .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
+                                .labelsHidden()
+                        }
+""", "Echo: settings toggle")
+
+    path = APP / "AudioRecorder.swift"
+    patch(path, """    private var audioRecorder: AVAudioRecorder?
+""", """    private var audioRecorder: AVAudioRecorder?
+    /// The echo cancelled copy of the current recording, starting or running.
+    private var echoStart: EchoCancellingRecorder.Start?
+    /// How much shorter than the plain recording the echo cancelled one may
+    /// be: its capture starts a few tens of ms later.
+    static let echoCoverageTolerance: TimeInterval = 0.3
+""", "Echo: recorder property")
+    patch(path, """            audioRecorder?.record()
+""", """            audioRecorder?.record()
+            startEchoCancellation(microphone: activeMic, rawURL: fileURL)
+""", "Echo: start beside the plain recorder")
+    patch(path, """    func stopRecording() async -> URL? {
+        await withCheckedContinuation { continuation in""", """    /// Records an echo cancelled copy beside the plain recording, which runs
+    /// exactly as before. A canceller that never starts, for example while
+    /// System Audio Recording access is off, costs the dictation nothing.
+    private func startEchoCancellation(microphone: MicrophoneService.AudioDevice?, rawURL: URL) {
+        guard AppPreferences.shared.cancelSpeakerEcho else {
+            EchoCancellation.log.notice("Recording path: microphone only, echo cancellation is off")
+            return
+        }
+        guard let microphone, let deviceID = MicrophoneService.shared.getCoreAudioDeviceID(for: microphone) else {
+            EchoCancellation.log.notice("Recording path: microphone only, no Core Audio device for the microphone")
+            return
+        }
+        let url = rawURL.deletingPathExtension().appendingPathExtension("echo.wav")
+        echoStart = EchoCancellingRecorder.begin(microphone: deviceID, url: url)
+    }
+    
+    /// The file to transcribe: the echo cancelled one if it covers the whole
+    /// recording, else the plain one. Removes the other and logs which ran.
+    private func finishEchoCancellation(_ start: EchoCancellingRecorder.Start?, rawURL: URL,
+                                        rawDuration: TimeInterval) -> URL {
+        guard let start else { return rawURL }
+        guard let echo = start.take() else {
+            try? FileManager.default.removeItem(at: start.url)
+            EchoCancellation.log.notice("Recording path: microphone only")
+            return rawURL
+        }
+        let echoDuration = echo.stop()
+        guard echoDuration >= rawDuration - Self.echoCoverageTolerance else {
+            try? FileManager.default.removeItem(at: start.url)
+            EchoCancellation.log.notice("Recording path: microphone only, echo cancelled capture has \\(echoDuration, privacy: .public) of \\(rawDuration, privacy: .public) s, System Audio Recording access may be off")
+            return rawURL
+        }
+        try? FileManager.default.removeItem(at: rawURL)
+        EchoCancellation.log.notice("Recording path: echo cancelled, \\(echoDuration, privacy: .public) of \\(rawDuration, privacy: .public) s")
+        return start.url
+    }
+    
+    private func discardEchoCancellation(_ start: EchoCancellingRecorder.Start?) {
+        guard let start else { return }
+        _ = start.take()?.stop()
+        try? FileManager.default.removeItem(at: start.url)
+    }
+    
+    func stopRecording() async -> URL? {
+        await withCheckedContinuation { continuation in""", "Echo: choose the file")
+    patch(path, """                self.audioRecorder = nil
+                self.currentRecordingURL = nil
+""", """                self.audioRecorder = nil
+                self.currentRecordingURL = nil
+                let echoStart = self.echoStart
+                self.echoStart = nil
+""", "Echo: detach with the recording")
+    patch(path, """                    if recordedDuration < Self.minimumRecordingDuration {
+                        try? FileManager.default.removeItem(at: url)
+                        continuation.resume(returning: nil)
+                    } else {
+                        continuation.resume(returning: url)
+                    }""", """                    if recordedDuration < Self.minimumRecordingDuration {
+                        self.discardEchoCancellation(echoStart)
+                        try? FileManager.default.removeItem(at: url)
+                        continuation.resume(returning: nil)
+                    } else {
+                        continuation.resume(returning: self.finishEchoCancellation(
+                            echoStart, rawURL: url, rawDuration: recordedDuration))
+                    }""", "Echo: stop after the tail")
+    patch(path, """        guard let url = currentRecordingURL else { return nil }
+        currentRecordingURL = nil
+        
+        if discard || recordedDuration < Self.minimumRecordingDuration {
+            try? FileManager.default.removeItem(at: url)
+            return nil
+        }
+        return url""", """        let echoStart = self.echoStart
+        self.echoStart = nil
+        
+        guard let url = currentRecordingURL else {
+            discardEchoCancellation(echoStart)
+            return nil
+        }
+        currentRecordingURL = nil
+        
+        if discard || recordedDuration < Self.minimumRecordingDuration {
+            discardEchoCancellation(echoStart)
+            try? FileManager.default.removeItem(at: url)
+            return nil
+        }
+        return finishEchoCancellation(echoStart, rawURL: url, rawDuration: recordedDuration)""", "Echo: stop or cancel")
+
 def literal(old: str, new: str, applied: str | None = None):
     return (re.escape(old), new.replace("\\", "\\\\"), new if applied is None else applied)
 
@@ -2568,6 +2736,7 @@ def main() -> int:
         patch_service_concurrency_warnings()
         patch_theme()
         patch_transcribing_timer()
+        patch_echo_cancellation()
     except PatchError as err:
         print(f"\nFAILED: {err}", file=sys.stderr)
         print("Upstream changed. Fix the anchor in this script and rerun.", file=sys.stderr)
