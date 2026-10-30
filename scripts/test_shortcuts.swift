@@ -78,8 +78,14 @@ final class MouseButtonMonitor {
     }
 }
 enum FocusUtils {
-    static func getCurrentCursorPosition() -> NSPoint? { nil }
+    static let mouse = NSPoint(x: 40, y: 30)
+    static var placements: [(anchor: NSPoint?, cursor: NSPoint)] = []
+    static func getCurrentCursorPosition() -> NSPoint { mouse }
     static func getInputAnchorPoint() -> NSPoint? { nil }
+    static func chooseIndicatorPoint(resolvedInputAnchor: NSPoint?, cursorPosition: NSPoint) -> NSPoint {
+        placements.append((resolvedInputAnchor, cursorPosition))
+        return cursorPosition
+    }
 }
 
 @main enum ShortcutTests {
@@ -97,6 +103,9 @@ enum FocusUtils {
         MouseButtonMonitor.shared.onButtonDown?()
         await tick()
         check("hidden modifier double-press setting does not block mouse start", window.starts == 1)
+        check("start places the indicator from the anchor and the mouse position",
+              FocusUtils.placements.count == 1 && FocusUtils.placements[0].anchor == nil
+              && FocusUtils.placements[0].cursor == FocusUtils.mouse)
         MouseButtonMonitor.shared.onButtonUp?()
         await tick()
         check("toggle mouse release does not submit recording", window.stops == 0)
