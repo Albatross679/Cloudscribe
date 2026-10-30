@@ -64,7 +64,9 @@ class ShortcutManager {
 
         KeyboardShortcuts.onKeyUp(for: .escape) { [weak self] in
             Task { @MainActor in
-                if self?.activeVm != nil, IndicatorWindowManager.shared.requestCancel() {
+                if IndicatorWindowManager.shared.cancelTranscription() {
+                    self?.activeVm = nil
+                } else if self?.activeVm != nil, IndicatorWindowManager.shared.requestCancel() {
                     self?.activeVm = nil
                 }
             }
@@ -125,6 +127,16 @@ class ShortcutManager {
     private func handleKeyDown() {
         holdWorkItem?.cancel()
         holdMode = false
+
+        // A press while a hotkey dictation transcribes cancels it. It starts
+        // nothing, and its key-up does nothing. Every trigger calls this on
+        // the main thread.
+        if MainActor.assumeIsolated({ IndicatorWindowManager.shared.cancelTranscription() }) {
+            activeVm = nil
+            lastPressDownTime = 0
+            pressConsumed = false
+            return
+        }
 
         // Require a double-tap only when starting a new recording. Once recording is
         // active, a single press stops it so the user isn't forced to double-tap again.

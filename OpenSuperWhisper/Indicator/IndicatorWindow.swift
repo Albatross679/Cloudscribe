@@ -30,6 +30,9 @@ class IndicatorViewModel: ObservableObject {
     /// Counts while hotkey dictation transcribes, nil before that.
     @Published private(set) var transcribing: TranscribingClock?
     private var transcribingTimer: Timer?
+    /// Set when the person cancels this session's transcription.
+    private var transcriptionCancelled = false
+    private var transcriptionStarted = false
     
     var recordingStartedAt: Date?
     
@@ -170,13 +173,21 @@ class IndicatorViewModel: ObservableObject {
             guard let self = self else { return }
             
             if let tempURL = await self.recorder.stopRecording() {
+                guard !self.transcriptionCancelled else {
+                    try? FileManager.default.removeItem(at: tempURL)
+                    return
+                }
+                self.transcriptionStarted = true
                 let metricID = UUID()
                 do {
                     print("start decoding...")
                     let duration = await AudioUtil.audioDuration(url: tempURL)
                     let text = try await transcriptionService.transcribeAudio(url: tempURL, settings: Settings(), metricID: metricID, deadline: deadline)
                     
-                    if text.isEmpty {
+                    if self.transcriptionCancelled {
+                        try? FileManager.default.removeItem(at: tempURL)
+                        return
+                    } else if text.isEmpty {
                         try? FileManager.default.removeItem(at: tempURL)
                         print("No speech detected, dictation discarded")
                     } else {
@@ -204,6 +215,10 @@ class IndicatorViewModel: ObservableObject {
                         print("Transcription result: \(text)")
                     }
                 } catch {
+                    if self.transcriptionCancelled || error is CancellationError {
+                        try? FileManager.default.removeItem(at: tempURL)
+                        return
+                    }
                     await DictationFailure.record(audioAt: tempURL, error: error, recordingID: metricID)
                     if error is DictationDeadlineExceeded {
                         await MainActor.run {
@@ -226,6 +241,19 @@ class IndicatorViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    /// Cancels this session's transcription. False unless it is transcribing.
+    func cancelTranscribing() -> Bool {
+        guard state == .decoding, !transcriptionCancelled else { return false }
+        transcriptionCancelled = true
+        stopTranscribingClock()
+        // Before the audio is handed over there is nothing to cancel in the
+        // service, and another transcription there is not this session's.
+        if transcriptionStarted {
+            transcriptionService.cancelTranscription()
+        }
+        return true
     }
     
     private func startTranscribingClock(deadline: ContinuousClock.Instant) {

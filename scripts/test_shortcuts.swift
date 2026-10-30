@@ -25,7 +25,7 @@ final class AppPreferences {
     var doublePressToTrigger = true
     var holdToRecord = false
 }
-enum ModifierKey: String { case none, leftCommand; var displayName: String { rawValue } }
+enum ModifierKey: String { case none, leftCommand, rightOption; var displayName: String { rawValue } }
 final class ModifierKeyMonitor {
     static let shared = ModifierKeyMonitor()
     var onKeyDown: (() -> Void)?
@@ -49,9 +49,28 @@ final class MouseButtonMonitor {
     var starts = 0
     var stops = 0
     var cancels = 0
+    /// A stopped hotkey dictation transcribes until cancelled or the test ends it.
+    var transcribing = false
+    var transcriptionCancels = 0
+    private init() {
+        // Hiding the indicator ends its session, transcribing or not.
+        NotificationCenter.default.addObserver(forName: .indicatorWindowDidHide, object: nil, queue: nil) { _ in
+            MainActor.assumeIsolated { IndicatorWindowManager.shared.transcribing = false }
+        }
+    }
     func prepare() -> IndicatorViewModel { KeyboardShortcuts.enable(.escape); return IndicatorViewModel() }
     func presentWindow(for vm: IndicatorViewModel, nearPoint: NSPoint?) {}
-    func stopRecording() { stops += 1 }
+    func stopRecording() { stops += 1; transcribing = true }
+    func cancelTranscription() -> Bool {
+        guard transcribing else { return false }
+        transcribing = false
+        transcriptionCancels += 1
+        NotificationCenter.default.post(name: .indicatorWindowDidHide, object: nil)
+        return true
+    }
+    func finishTranscribing() {
+        NotificationCenter.default.post(name: .indicatorWindowDidHide, object: nil)
+    }
     func requestCancel() -> Bool {
         cancels += 1
         NotificationCenter.default.post(name: .indicatorWindowDidHide, object: nil)
@@ -129,6 +148,57 @@ enum FocusUtils {
         check("modifier second tap starts recording", window.starts == starts + 1)
         KeyboardShortcuts.up[.escape]?()
         await tick()
+
+        // Right Option held to record, as the captain uses it.
+        prefs.modifierOnlyHotkey = "rightOption"
+        prefs.doublePressToTrigger = false
+        prefs.holdToRecord = true
+        NotificationCenter.default.post(name: .hotkeySettingsChanged, object: nil)
+        func hold() async {
+            ModifierKeyMonitor.shared.onKeyDown?()
+            await tick(0.36)
+            ModifierKeyMonitor.shared.onKeyUp?()
+            await tick()
+        }
+        var mark = (window.starts, window.stops, window.cancels)
+        await hold()
+        check("idle hold records and stops once", window.starts == mark.0 + 1 && window.stops == mark.1 + 1 && window.transcribing)
+        mark = (window.starts, window.stops, window.cancels)
+        ModifierKeyMonitor.shared.onKeyDown?()
+        await tick()
+        check("press while transcribing cancels the transcription", window.transcriptionCancels == 1 && !window.transcribing)
+        check("cancel press starts no recording", window.starts == mark.0)
+        await tick(0.36)
+        ModifierKeyMonitor.shared.onKeyUp?()
+        await tick()
+        check("cancel press key-up does nothing", window.starts == mark.0 && window.stops == mark.1 && window.cancels == mark.2)
+        await hold()
+        check("next hold records normally after a cancel", window.starts == mark.0 + 1 && window.stops == mark.1 + 1)
+        KeyboardShortcuts.up[.escape]?()
+        await tick()
+        check("Escape cancels while transcribing", window.transcriptionCancels == 2 && window.cancels == mark.2 && !window.transcribing)
+        await hold()
+        window.finishTranscribing()
+        await tick()
+        mark = (window.starts, window.stops, window.cancels)
+        await hold()
+        check("hold after a finished transcription records normally", window.starts == mark.0 + 1 && window.stops == mark.1 + 1 && window.transcriptionCancels == 2)
+        window.finishTranscribing()
+
+        // Double-press mode: one press is enough to cancel.
+        prefs.doublePressToTrigger = true
+        prefs.holdToRecord = false
+        NotificationCenter.default.post(name: .hotkeySettingsChanged, object: nil)
+        ModifierKeyMonitor.shared.onKeyDown?(); ModifierKeyMonitor.shared.onKeyUp?()
+        ModifierKeyMonitor.shared.onKeyDown?(); ModifierKeyMonitor.shared.onKeyUp?()
+        await tick()
+        ModifierKeyMonitor.shared.onKeyDown?(); ModifierKeyMonitor.shared.onKeyUp?()
+        await tick()
+        mark = (window.starts, window.stops, window.cancels)
+        check("toggle double-press session reaches transcribing", window.transcribing)
+        ModifierKeyMonitor.shared.onKeyDown?(); ModifierKeyMonitor.shared.onKeyUp?()
+        await tick()
+        check("single press cancels transcribing in double-press mode", window.transcriptionCancels == 3 && window.starts == mark.0 && window.stops == mark.1)
         if failures != 0 { exit(1) }
         print("all shortcut dispatch checks passed")
     }

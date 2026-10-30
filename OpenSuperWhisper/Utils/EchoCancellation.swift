@@ -474,7 +474,10 @@ final class EchoCancellingRecorder {
             kAudioAggregateDeviceIsPrivateKey: true,
             kAudioAggregateDeviceMainSubDeviceKey: microphoneUID as String,
             kAudioAggregateDeviceSubDeviceListKey: [[kAudioSubDeviceUIDKey: microphoneUID as String]],
-            kAudioAggregateDeviceTapAutoStartKey: true,
+            // With auto start on, the aggregate runs no IO at all, microphone
+            // included, until something plays. Off, it runs from the start
+            // and the tap hears silence until then.
+            kAudioAggregateDeviceTapAutoStartKey: false,
             kAudioAggregateDeviceTapListKey: [[
                 kAudioSubTapUIDKey: description.uuid.uuidString,
                 kAudioSubTapDriftCompensationKey: true
