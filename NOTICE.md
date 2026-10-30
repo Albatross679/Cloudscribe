@@ -51,7 +51,7 @@ The application links these projects, which are pulled in by the upstream Xcode 
 | [GRDB.swift](https://github.com/groue/GRDB.swift) | MIT | 2015-2025 Gwendal Roué |
 | [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) | MIT | Sindre Sorhus |
 
-## Bundled by OSW Cloud
+## Bundled by Cloudscribe
 
 | Project | License | Copyright |
 |---|---|---|
