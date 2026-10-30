@@ -181,9 +181,31 @@ final class OpenRouterStub: URLProtocol {
         precondition(manual == "slow but fine" && elapsed > limit + .milliseconds(500), "manual call returned \(manual) after \(elapsed)")
         print("PASS manual transcription without a deadline waits \(elapsed) for the answer")
 
+        // 5. The person cancels while the upload is in flight.
+        OpenRouterStub.reset(transcription: .never)
+        start = clock.now
+        outcome = nil
+        let running = Task { @MainActor in
+            try await service.transcribeAudio(url: wav, settings: Settings(), deadline: clock.now + .seconds(8))
+        }
+        try await Task.sleep(nanoseconds: 200_000_000)
+        service.cancelTranscription()
+        do { _ = try await running.value } catch { outcome = error }
+        elapsed = clock.now - start
+        precondition(outcome is CancellationError, "a cancel should end as CancellationError, got \(String(describing: outcome))")
+        precondition(elapsed < .seconds(1), "cancel took \(elapsed)")
+        try await waitUntil { OpenRouterStub.counts.stopped == 1 }
+        print("PASS a cancelled dictation stops its request at once, after \(elapsed)")
+
+        // 6. The service is free right away.
+        OpenRouterStub.reset(transcription: .text("after cancel", after: 0))
+        let afterCancel = try await service.transcribeAudio(url: wav, settings: Settings(), deadline: clock.now + limit)
+        precondition(afterCancel == "after cancel", "dictation after a cancel returned \(afterCancel)")
+        print("PASS the next dictation after a cancel succeeds")
+
         let runs = store.snapshot().archive.runs.map(\.outcome)
-        precondition(runs == ["deadlineExceeded", "success", "deadlineExceeded", "success"], "run outcomes \(runs)")
-        print("PASS usage metrics record deadlineExceeded")
+        precondition(runs == ["deadlineExceeded", "success", "deadlineExceeded", "success", "cancelled", "success"], "run outcomes \(runs)")
+        print("PASS usage metrics record deadlineExceeded and a cancel as cancelled, not failure")
     }
 
     @MainActor static func waitUntil(_ condition: () -> Bool) async throws {

@@ -51,6 +51,15 @@ The application links these projects, which are pulled in by the upstream Xcode 
 | [GRDB.swift](https://github.com/groue/GRDB.swift) | MIT | 2015-2025 Gwendal Roué |
 | [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) | MIT | Sindre Sorhus |
 
+## Bundled by Cloudscribe
+
+| Project | License | Copyright |
+|---|---|---|
+| [webrtc-audio-processing](https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing) | BSD 3-Clause, full text in its `COPYING` | 2011 Google Inc., The WebRTC project authors |
+| [Abseil](https://github.com/abseil/abseil-cpp), built by the above | Apache 2.0 | The Abseil Authors |
+
+Both are linked statically into the app for speaker echo cancellation.
+
 ## Models
 
 Transcription runs on Cloudflare Workers AI. The models are operated by Cloudflare and are not distributed with this software:

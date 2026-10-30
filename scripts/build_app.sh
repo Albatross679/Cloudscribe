@@ -37,6 +37,10 @@ fi
 
 cd "$CHECKOUT"
 
+# WebRTC's echo canceller, linked statically. Incremental after the first
+# run, and needed before run.sh links its debug build.
+scripts/build_echo_canceller.sh
+
 # libwhisper and the autocorrect dylib are native dependencies the Swift
 # target links against; run.sh is upstream's builder for both.
 if [ ! -f build/libautocorrect_swift.dylib ]; then

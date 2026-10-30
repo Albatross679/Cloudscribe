@@ -162,6 +162,10 @@ final class AppPreferences {
     
     @UserDefault(key: "playSoundOnRecordStart", defaultValue: false)
     var playSoundOnRecordStart: Bool
+
+    /// Removes audio the Mac plays from dictation recordings.
+    @UserDefault(key: "cancelSpeakerEcho", defaultValue: true)
+    var cancelSpeakerEcho: Bool
     
     @UserDefault(key: "hasCompletedOnboarding", defaultValue: false)
     var hasCompletedOnboarding: Bool

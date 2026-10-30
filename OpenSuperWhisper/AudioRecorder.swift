@@ -22,6 +22,11 @@ class AudioRecorder: NSObject, ObservableObject {
     private let workQueue = DispatchQueue(label: "com.opensuperwhisper.audiorecorder")
     
     private var audioRecorder: AVAudioRecorder?
+    /// The echo cancelled copy of the current recording, starting or running.
+    private var echoStart: EchoCancellingRecorder.Start?
+    /// How much shorter than the plain recording the echo cancelled one may
+    /// be: its capture starts a few tens of ms later.
+    static let echoCoverageTolerance: TimeInterval = 0.3
     private var audioPlayer: AVAudioPlayer?
     private var notificationSound: NSSound?
     private let temporaryDirectory: URL
@@ -198,6 +203,7 @@ class AudioRecorder: NSObject, ObservableObject {
             audioRecorder?.delegate = self
             audioRecorder?.isMeteringEnabled = monitorConnection
             audioRecorder?.record()
+            startEchoCancellation(microphone: activeMic, rawURL: fileURL)
             if monitorConnection {
                 startConnectionMonitoring()
             } else {
@@ -210,6 +216,49 @@ class AudioRecorder: NSObject, ObservableObject {
             restoreSystemDefaultInputIfNeeded()
             updateRecordingState(isRecording: false, isConnecting: false)
         }
+    }
+    
+    /// Records an echo cancelled copy beside the plain recording, which runs
+    /// exactly as before. A canceller that never starts, for example while
+    /// System Audio Recording access is off, costs the dictation nothing.
+    private func startEchoCancellation(microphone: MicrophoneService.AudioDevice?, rawURL: URL) {
+        guard AppPreferences.shared.cancelSpeakerEcho else {
+            EchoCancellation.log.notice("Recording path: microphone only, echo cancellation is off")
+            return
+        }
+        guard let microphone, let deviceID = MicrophoneService.shared.getCoreAudioDeviceID(for: microphone) else {
+            EchoCancellation.log.notice("Recording path: microphone only, no Core Audio device for the microphone")
+            return
+        }
+        let url = rawURL.deletingPathExtension().appendingPathExtension("echo.wav")
+        echoStart = EchoCancellingRecorder.begin(microphone: deviceID, url: url)
+    }
+    
+    /// The file to transcribe: the echo cancelled one if it covers the whole
+    /// recording, else the plain one. Removes the other and logs which ran.
+    private func finishEchoCancellation(_ start: EchoCancellingRecorder.Start?, rawURL: URL,
+                                        rawDuration: TimeInterval) -> URL {
+        guard let start else { return rawURL }
+        guard let echo = start.take() else {
+            try? FileManager.default.removeItem(at: start.url)
+            EchoCancellation.log.notice("Recording path: microphone only")
+            return rawURL
+        }
+        let echoDuration = echo.stop()
+        guard echoDuration >= rawDuration - Self.echoCoverageTolerance else {
+            try? FileManager.default.removeItem(at: start.url)
+            EchoCancellation.log.notice("Recording path: microphone only, echo cancelled capture has \(echoDuration, privacy: .public) of \(rawDuration, privacy: .public) s, System Audio Recording access may be off")
+            return rawURL
+        }
+        try? FileManager.default.removeItem(at: rawURL)
+        EchoCancellation.log.notice("Recording path: echo cancelled, \(echoDuration, privacy: .public) of \(rawDuration, privacy: .public) s")
+        return start.url
+    }
+    
+    private func discardEchoCancellation(_ start: EchoCancellingRecorder.Start?) {
+        guard let start else { return }
+        _ = start.take()?.stop()
+        try? FileManager.default.removeItem(at: start.url)
     }
     
     func stopRecording() async -> URL? {
@@ -225,6 +274,8 @@ class AudioRecorder: NSObject, ObservableObject {
                 // end of the last word released together with the hotkey survives.
                 self.audioRecorder = nil
                 self.currentRecordingURL = nil
+                let echoStart = self.echoStart
+                self.echoStart = nil
                 self.stopConnectionMonitoring()
                 self.updateRecordingState(isRecording: false, isConnecting: false)
                 
@@ -238,10 +289,12 @@ class AudioRecorder: NSObject, ObservableObject {
                     }
                     
                     if recordedDuration < Self.minimumRecordingDuration {
+                        self.discardEchoCancellation(echoStart)
                         try? FileManager.default.removeItem(at: url)
                         continuation.resume(returning: nil)
                     } else {
-                        continuation.resume(returning: url)
+                        continuation.resume(returning: self.finishEchoCancellation(
+                            echoStart, rawURL: url, rawDuration: recordedDuration))
                     }
                 }
             }
@@ -262,14 +315,21 @@ class AudioRecorder: NSObject, ObservableObject {
         restoreSystemDefaultInputIfNeeded()
         updateRecordingState(isRecording: false, isConnecting: false)
         
-        guard let url = currentRecordingURL else { return nil }
+        let echoStart = self.echoStart
+        self.echoStart = nil
+        
+        guard let url = currentRecordingURL else {
+            discardEchoCancellation(echoStart)
+            return nil
+        }
         currentRecordingURL = nil
         
         if discard || recordedDuration < Self.minimumRecordingDuration {
+            discardEchoCancellation(echoStart)
             try? FileManager.default.removeItem(at: url)
             return nil
         }
-        return url
+        return finishEchoCancellation(echoStart, rawURL: url, rawDuration: recordedDuration)
     }
     
     #if os(macOS)

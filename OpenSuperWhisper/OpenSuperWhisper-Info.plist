@@ -21,6 +21,8 @@
 	<string>14.0</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Cloudscribe needs microphone access to record audio for transcription.</string>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Cloudscribe listens to what this Mac plays during dictation so it can remove that sound from your recording.</string>
 	<key>NSAccessibilityUsageDescription</key>
 	<string>Cloudscribe needs accessibility access to provide system-wide functionality.</string>
 	<key>NSAppleEventsUsageDescription</key>

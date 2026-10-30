@@ -17,7 +17,7 @@ jobs:
           # Fresh generator tests extract the pinned baseline from git history.
           fetch-depth: 0
       - name: Install dependencies
-        run: brew install cmake libomp rust
+        run: brew install cmake libomp rust meson ninja
       - name: Set up Ruby (for xcpretty)
         uses: ruby/setup-ruby@v1
         with:
@@ -41,3 +41,5 @@ jobs:
         run: scripts/build_app.sh
       - name: Verify candidate signature
         run: codesign --verify --deep --strict build/Build/Products/Release/Cloudscribe.app
+      - name: Echo canceller on a simulated speaker echo
+        run: scripts/test_echo_canceller.sh

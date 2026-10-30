@@ -827,6 +827,8 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lomp",
+					"-lecho_canceller",
+					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ru.starmel.OpenSuperWhisper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -893,6 +895,8 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lomp",
+					"-lecho_canceller",
+					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ru.starmel.OpenSuperWhisper;
 				PRODUCT_NAME = "$(TARGET_NAME)";

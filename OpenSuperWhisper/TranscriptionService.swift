@@ -37,6 +37,9 @@ class TranscriptionService: ObservableObject {
     private var transcriptionTask: TranscriptionTaskBox? = nil
     private var isCancelled = false
     private var usageServiceBusy = false
+    /// Counts cancelTranscription calls, so a running call can tell that it
+    /// was cancelled even after isCancelled is reset.
+    private var cancelGeneration = 0
     
     private let usageMetricsStore: UsageMetricsStore
 
@@ -52,6 +55,7 @@ class TranscriptionService: ObservableObject {
     }
     
     func cancelTranscription() {
+        cancelGeneration &+= 1
         isCancelled = true
         currentEngine?.cancelTranscription()
         transcriptionTask?.task.cancel()
@@ -123,6 +127,7 @@ class TranscriptionService: ObservableObject {
         }
         usageServiceBusy = true
         defer { usageServiceBusy = false }
+        let generation = cancelGeneration
 
         // Serialize access to the engine: a whisper context must not process
         // two transcriptions concurrently (indicator flow and queue flow can
@@ -253,6 +258,11 @@ class TranscriptionService: ObservableObject {
             } else {
                 result = try await task.value
             }
+            // An engine that ignores cancellation still must not paste.
+            guard cancelGeneration == generation else {
+                metricOutcome = "cancelled"
+                throw CancellationError()
+            }
             metricOutcome = "success"
             return result
         } catch let error as DictationDeadlineExceeded {
@@ -264,7 +274,12 @@ class TranscriptionService: ObservableObject {
         } catch is CancellationError {
             metricOutcome = "cancelled"
             isCancelled = true
+            if cancelGeneration != generation { throw CancellationError() }
             throw TranscriptionError.processingFailed
+        } catch where cancelGeneration != generation {
+            // A cancelled upload surfaces as the provider's own error.
+            metricOutcome = "cancelled"
+            throw CancellationError()
         }
     }
 

@@ -252,6 +252,14 @@ class IndicatorWindowManager: IndicatorViewDelegate {
         hide()
     }
     
+    /// Cancels a hotkey dictation that is transcribing and hides the
+    /// indicator. False when nothing is transcribing.
+    func cancelTranscription() -> Bool {
+        guard let viewModel, viewModel.cancelTranscribing() else { return false }
+        hide()
+        return true
+    }
+    
     @discardableResult
     func requestCancel() -> Bool {
         guard let viewModel else { return false }
