@@ -2541,6 +2541,61 @@ def patch_hotkey_cancel() -> None:
         }
 """, "Cancel: hotkey while transcribing")
 
+def patch_indicator_distance() -> None:
+    """Keep the indicator near the mouse when the caret anchor is far from it.
+
+    Ported from upstream 430075438fc763bb291811c607ace790e2a7fb42 ("Limit
+    the indicator distance from the cursor"). Some apps report a caret or
+    element frame that is far from where the person is working; the
+    indicator then falls back to the mouse position.
+    """
+    path = APP / "Utils/FocusUtils.swift"
+    patch(path, """class FocusUtils {
+    
+    static func getCurrentCursorPosition() -> NSPoint {
+        return NSEvent.mouseLocation
+    }
+""", """class FocusUtils {
+    private static let maximumIndicatorAnchorDistanceFromCursor: CGFloat = 200
+    
+    static func getCurrentCursorPosition() -> NSPoint {
+        return NSEvent.mouseLocation
+    }
+
+    static func chooseIndicatorPoint(resolvedInputAnchor: NSPoint?, cursorPosition: NSPoint, maxDistanceFromCursor: CGFloat = maximumIndicatorAnchorDistanceFromCursor) -> NSPoint {
+        guard let resolvedInputAnchor else {
+            print("Indicator placement heuristic: no input anchor; cursor=\\(formatPoint(cursorPosition)); using cursor")
+            return cursorPosition
+        }
+
+        let distanceFromCursor = hypot(resolvedInputAnchor.x - cursorPosition.x, resolvedInputAnchor.y - cursorPosition.y)
+        guard distanceFromCursor <= maxDistanceFromCursor else {
+            print("Indicator placement heuristic: inputAnchor=\\(formatPoint(resolvedInputAnchor)); cursor=\\(formatPoint(cursorPosition)); distance=\\(formatDistance(distanceFromCursor)); max=\\(formatDistance(maxDistanceFromCursor)); using cursor")
+            return cursorPosition
+        }
+
+        print("Indicator placement heuristic: inputAnchor=\\(formatPoint(resolvedInputAnchor)); cursor=\\(formatPoint(cursorPosition)); distance=\\(formatDistance(distanceFromCursor)); max=\\(formatDistance(maxDistanceFromCursor)); using input anchor")
+        return resolvedInputAnchor
+    }
+
+    private static func formatPoint(_ point: NSPoint) -> String {
+        "(\\(Int(point.x.rounded())), \\(Int(point.y.rounded())))"
+    }
+
+    private static func formatDistance(_ distance: CGFloat) -> String {
+        "\\(Int(distance.rounded())) pt"
+    }
+""", "Indicator: choose the anchor or the cursor")
+
+    path = APP / "ShortcutManager.swift"
+    patch(path, """                let indicatorPoint = anchorPoint ?? cursorPosition
+""", """                let indicatorPoint = FocusUtils.chooseIndicatorPoint(
+                    resolvedInputAnchor: anchorPoint,
+                    cursorPosition: cursorPosition
+                )
+""", "Indicator: limit the distance from the cursor")
+
+
 def literal(old: str, new: str, applied: str | None = None):
     return (re.escape(old), new.replace("\\", "\\\\"), new if applied is None else applied)
 
@@ -2881,6 +2936,7 @@ def main() -> int:
         patch_transcribing_timer()
         patch_echo_cancellation()
         patch_hotkey_cancel()
+        patch_indicator_distance()
     except PatchError as err:
         print(f"\nFAILED: {err}", file=sys.stderr)
         print("Upstream changed. Fix the anchor in this script and rerun.", file=sys.stderr)

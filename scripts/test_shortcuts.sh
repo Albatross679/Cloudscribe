@@ -21,9 +21,14 @@ mouse = (app / 'MouseButtonMonitor.swift').read_text()
 manager = (app / 'ShortcutManager.swift').read_text().replace('import KeyboardShortcuts\n', '')
 (out / 'shortcuts.swift').write_text(mouse[:mouse.index('class MouseButtonMonitor')]
     + manager + '\n' + (root / 'scripts/test_shortcuts.swift').read_text())
+# Compile the generated FocusUtils as shipped; nothing in it uses the shortcut library.
+focus = (app / 'Utils/FocusUtils.swift').read_text().replace('import KeyboardShortcuts\n', '')
+(out / 'placement.swift').write_text(focus + '\n' + (root / 'scripts/test_indicator_placement.swift').read_text())
 PY
 swiftc -O -parse-as-library -o "$OUT/mouse" "$OUT/mouse.swift"
 swiftc -O -parse-as-library -o "$OUT/shortcuts" "$OUT/shortcuts.swift"
+swiftc -O -parse-as-library -o "$OUT/placement" "$OUT/placement.swift"
 "$OUT/mouse"
 "$OUT/shortcuts"
+"$OUT/placement"
 python3 "$ROOT/scripts/test_patch_osw.py"
