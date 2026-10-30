@@ -4,9 +4,9 @@
 
 **[Starmel/OpenSuperWhisper](https://github.com/Starmel/OpenSuperWhisper)** — MIT License, Copyright (c) 2024 OpenSuperWhisper.
 
-Everything a dictation app actually has to get right comes from that project: the global hotkey, the audio recorder, the microphone handling, pasting into the focused application, the transcription history, the settings interface, and the local Whisper and Parakeet engines. This fork adds Cloudflare Direct/Worker, Hugging Face and OpenRouter providers, local credential handling, usage charts, shortcut refinements and the Cloudflare Worker service. OSW Cloud modifications retain their MIT notice in [docs/cloud-dictation-MIT.txt](docs/cloud-dictation-MIT.txt).
+Everything a dictation app actually has to get right comes from that project: the global hotkey, the audio recorder, the microphone handling, pasting into the focused application, the transcription history, the settings interface, and the local Whisper and Parakeet engines. This fork adds Cloudflare Direct/Worker, Hugging Face and OpenRouter providers, local credential handling, usage charts, shortcut refinements and the Cloudflare Worker service. Cloudscribe modifications retain their MIT notice in [docs/cloud-dictation-MIT.txt](docs/cloud-dictation-MIT.txt).
 
-The repository is a genuine GitHub fork retaining upstream history and its root app layout. `scripts/patch_osw.py` applies the OSW Cloud owner-source changes in place, without a nested clone. The installed behavior remains based on upstream bef6bc0; newer upstream development remains on develop and is not integrated by this migration. The original upstream README is preserved at [docs/upstream-readme.md](docs/upstream-readme.md).
+The repository is a genuine GitHub fork retaining upstream history and its root app layout. `scripts/patch_osw.py` applies the Cloudscribe owner-source changes in place, without a nested clone. The installed behavior remains based on upstream bef6bc0; newer upstream development remains on develop and is not integrated by this migration. The original upstream README is preserved at [docs/upstream-readme.md](docs/upstream-readme.md).
 
 If you want a dictation app that runs entirely on your own machine, use OpenSuperWhisper directly. It is the better choice for most people, and it ships a notarized installer.
 

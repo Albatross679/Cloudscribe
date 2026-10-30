@@ -1,6 +1,6 @@
 # Repository migration
 
-OSW Cloud now has a genuine GitHub fork at https://github.com/Albatross679/OpenSuperWhisper, whose parent is Starmel/OpenSuperWhisper. The existing cloud-dictation repository is retained, never deleted. Archival and active-development cutover require separate approval after verified migration publication and preservation of dependent work.
+OSW Cloud, since renamed Cloudscribe, now has a genuine GitHub fork at https://github.com/Albatross679/Cloudscribe (first published as Albatross679/OpenSuperWhisper), whose parent is Starmel/OpenSuperWhisper. The existing cloud-dictation repository is retained, never deleted. Archival and active-development cutover require separate approval after verified migration publication and preservation of dependent work.
 
 ## Branches and baseline
 

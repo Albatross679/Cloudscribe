@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply OSW Cloud owner-source patches to this fork in place.
+"""Apply Cloudscribe owner-source patches to this fork in place.
 
 Every edit is an exact string replacement that is verified before writing. If
 upstream moves any anchor the script stops and names the file it could not
@@ -14,7 +14,7 @@ from pathlib import Path
 
 REPO = "https://github.com/Starmel/OpenSuperWhisper.git"
 # Pinned migration baseline. The fork retains later upstream history on develop,
-# but OSW Cloud deliberately preserves the installed app's bef6bc0 behavior.
+# but Cloudscribe deliberately preserves the installed app's bef6bc0 behavior.
 # Updating this baseline requires a separate reviewed upstream integration.
 UPSTREAM_REF = "bef6bc0421d0c010e8f2fb4288c0d74978c8b964"
 ROOT = Path(__file__).resolve().parent.parent
@@ -1465,6 +1465,12 @@ enum OnboardingModelType {
         print("  + Onboarding: download no-op")
     else:
         print("  = Onboarding: download no-op: already applied")
+    patch(
+        view,
+        """                    Text("OpenSuperWhisper")""",
+        """                    Text("Cloudscribe")""",
+        "Onboarding: product name",
+    )
 
 
 def patch_language_util() -> None:
@@ -1786,13 +1792,19 @@ def patch_local_engine_tab() -> None:
         APP / "OpenSuperWhisperApp.swift",
         """        menu.addItem(NSMenuItem(title: "OpenSuperWhisper", action: #selector(openApp), keyEquivalent: "o"))
 """,
-        """        menu.addItem(NSMenuItem(title: "OpenSuperWhisper", action: #selector(openApp), keyEquivalent: "o"))
+        """        menu.addItem(NSMenuItem(title: "Cloudscribe", action: #selector(openApp), keyEquivalent: "o"))
         // Shown here, chosen only in Settings. Without an action it stays disabled.
         let activeEngine = SpeechRecognitionChoice.resolve(
             engine: AppPreferences.shared.selectedEngine, provider: AppPreferences.shared.cloudProvider)
         menu.addItem(NSMenuItem(title: activeEngine.menuBarTitle, action: nil, keyEquivalent: ""))
 """,
         "Menu bar: active engine",
+    )
+    patch(
+        APP / "OpenSuperWhisperApp.swift",
+        'accessibilityDescription: "OpenSuperWhisper")',
+        'accessibilityDescription: "Cloudscribe")',
+        "Menu bar: product name",
     )
 
 

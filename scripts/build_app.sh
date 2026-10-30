@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# Build the patched OpenSuperWhisper with the Cloudflare engine.
+# Build Cloudscribe, the patched OpenSuperWhisper with the Cloudflare engine.
 #
 # Ships under its own bundle id and name so it coexists with an installed
 # stock OpenSuperWhisper instead of sharing its preferences and hotkeys.
+# The bundle id predates the Cloudscribe name and stays as it is, so existing
+# permission grants, preferences and Application Support data carry over.
 # Signs with a stable local identity when one exists, falling back to ad hoc.
 # The identity matters: macOS ties permission grants to the signature, so ad
 # hoc signing invalidates Accessibility and Input Monitoring on every build.
@@ -14,7 +16,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 BUNDLE_ID="local.clouddictation.OpenSuperWhisper"
 SIGN_CN="Cloud Dictation Local Signing"
-DISPLAY_NAME="OSW Cloud"
+DISPLAY_NAME="Cloudscribe"
 VERSION=$(python3 -c "import json;print(json.load(open('$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/package.json'))['version'])")
 
 IDENTITY="-"
@@ -55,7 +57,11 @@ xcodebuild \
   PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
   build
 
-APP="$CHECKOUT/build/Build/Products/Release/OpenSuperWhisper.app"
+# Xcode names the bundle after the OpenSuperWhisper target. Copy it to the
+# product name, keeping the original so the next incremental build reuses it.
+APP="$CHECKOUT/build/Build/Products/Release/$DISPLAY_NAME.app"
+rm -rf "$APP"
+ditto "$CHECKOUT/build/Build/Products/Release/OpenSuperWhisper.app" "$APP"
 PLIST="$APP/Contents/Info.plist"
 
 /usr/libexec/PlistBuddy -c "Set :CFBundleName $DISPLAY_NAME" "$PLIST" 2>/dev/null \

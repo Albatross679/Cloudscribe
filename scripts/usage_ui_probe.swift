@@ -39,7 +39,7 @@ import AppKit
         let width: CGFloat = mode == "narrow" ? 460 : 800
         let window = NSWindow(contentRect: NSRect(x: 100, y: 100, width: width, height: 840),
                               styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-        window.title = "OSW Cloud usage UI probe, isolated sample profile"
+        window.title = "Cloudscribe usage UI probe, isolated sample profile"
         let view = UsageDashboard(store: store, initialProvider: mode == "filtered" ? "openrouter" : "all",
                                   initialPeriod: mode == "monthly" ? .monthly : mode == "weekly" ? .weekly : .daily,
                                   initialRange: mode == "monthly" ? "all" : "30")

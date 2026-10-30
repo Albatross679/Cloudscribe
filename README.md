@@ -1,6 +1,6 @@
-# OSW Cloud
+# Cloudscribe
 
-OSW Cloud 0.2.0 is dictation for macOS. Hold a hotkey, speak, and the text is typed into whatever app has focus. Speech is transcribed either on this Mac or by a cloud provider you choose.
+Cloudscribe 0.2.0 is dictation for macOS. Hold a hotkey, speak, and the text is typed into whatever app has focus. Speech is transcribed either on this Mac or by a cloud provider you choose.
 
 It is a fork of [Starmel/OpenSuperWhisper](https://github.com/Starmel/OpenSuperWhisper) (MIT, see [LICENSE](LICENSE)). The original [cloud-dictation repository](https://github.com/Albatross679/cloud-dictation) is kept for history and old release downloads. See [migration boundaries](docs/repository-migration.md) and the [original upstream README](docs/upstream-readme.md).
 
@@ -20,15 +20,17 @@ A line under the bar and the first item of the menu bar menu name the engine dic
 Version 0.2.0 has no prebuilt download yet. Build it from source:
 
 ```bash
-git clone --recurse-submodules https://github.com/Albatross679/OpenSuperWhisper.git
-cd OpenSuperWhisper
+git clone --recurse-submodules https://github.com/Albatross679/Cloudscribe.git
+cd Cloudscribe
 ./scripts/create_signing_identity.sh   # once, keeps macOS permissions across rebuilds
 ./scripts/build_app.sh
 ```
 
-The build needs Xcode, cmake, Rust and libomp. It produces `build/Build/Products/Release/OpenSuperWhisper.app`, shown as `OSW Cloud`. Copy it to `/Applications/OSW Cloud.app`. See [docs/building.md](docs/building.md) for requirements, signing and packaging.
+The build needs Xcode, cmake, Rust and libomp. It produces `build/Build/Products/Release/Cloudscribe.app`. Copy it to `/Applications/Cloudscribe.app`. See [docs/building.md](docs/building.md) for requirements, signing and packaging.
 
 The older 0.1.0 release is still available as a [DMG](https://github.com/Albatross679/cloud-dictation/releases/download/v0.1.0/OSW.Cloud.dmg) or with `brew install --cask albatross679/tap/osw-cloud`. It does not have the 0.2.0 changes listed in [docs/release-notes.md](docs/release-notes.md).
+
+Cloudscribe was called OSW Cloud until after 0.2.0. It keeps the old bundle id and data folders, so an installed OSW Cloud's permissions, keys, history and settings carry over. Delete `/Applications/OSW Cloud.app` after installing Cloudscribe.
 
 ## Cloudflare
 

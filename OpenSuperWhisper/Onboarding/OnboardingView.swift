@@ -353,7 +353,7 @@ struct OnboardingView: View {
                         .fontWeight(.medium)
                         .foregroundColor(Theme.mutedText)
                     
-                    Text("OpenSuperWhisper")
+                    Text("Cloudscribe")
                         .font(.system(size: 32, weight: .bold))
                         .foregroundStyle(Theme.text)
                 }

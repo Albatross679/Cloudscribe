@@ -24,12 +24,14 @@ macOS ties permission grants to an app's designated requirement. Ad hoc signing 
 A self-signed certificate makes the requirement name the certificate instead, so grants survive rebuilds. It is user scoped, free, and needs no Apple Developer account. Check it took:
 
 ```bash
-codesign -d -r- "/Applications/OSW Cloud.app"
+codesign -d -r- "/Applications/Cloudscribe.app"
 ```
 
 A requirement mentioning `cdhash` means the identity is missing and the build fell back to ad hoc.
 
-The app ships as bundle id `local.clouddictation.OpenSuperWhisper`, display name `OSW Cloud`, so it coexists with a stock OpenSuperWhisper install rather than sharing its preferences. If both are installed, give them different record hotkeys; the default is Option + backtick in each.
+The app ships as bundle id `local.clouddictation.OpenSuperWhisper`, display name `Cloudscribe`, so it coexists with a stock OpenSuperWhisper install rather than sharing its preferences. If both are installed, give them different record hotkeys; the default is Option + backtick in each.
+
+The bundle id, preferences domain, `~/Library/Application Support/OSW Cloud` folder, Keychain service and signing identity all date from the OSW Cloud name and are kept on purpose. macOS permission grants, API keys, history and settings belong to them, so renaming any of them would reset an existing install. Xcode still names its build product `OpenSuperWhisper.app` after the target; `scripts/build_app.sh` copies it to `Cloudscribe.app` before signing.
 
 ## Packaging
 
@@ -37,7 +39,7 @@ The app ships as bundle id `local.clouddictation.OpenSuperWhisper`, display name
 ./scripts/make_dmg.sh
 ```
 
-Produces a drag-to-install `runs/OSW Cloud.dmg`, about 8 MB. Unsigned by Apple, so it installs on the machine that built it and Gatekeeper refuses it everywhere else.
+Produces a drag-to-install `runs/Cloudscribe.dmg`, about 8 MB. Unsigned by Apple, so it installs on the machine that built it and Gatekeeper refuses it everywhere else.
 
 Distribution needs an Apple Developer ID, after which the same script signs, notarizes, and staples:
 
@@ -50,14 +52,14 @@ The DMG format is not what makes an app distributable; notarization is. Upstream
 Notarization needs an Apple Developer Program membership, currently $99 a year. Nothing else substitutes: a self-signed certificate keeps permissions stable on the machine that built the app, but Gatekeeper still refuses it elsewhere. Until then a recipient must clear the quarantine flag by hand:
 
 ```bash
-xattr -dr com.apple.quarantine "/Applications/OSW Cloud.app"
+xattr -dr com.apple.quarantine "/Applications/Cloudscribe.app"
 ```
 
 ## Reproducibility
 
 The tracked source rebuilds both the app and the DMG. Verified by cloning the repo to a clean directory and running the pipeline: all patches applied and the app built.
 
-Clone this fork with `git clone --recurse-submodules https://github.com/Albatross679/OpenSuperWhisper.git`. Its default branch `osw-cloud-baseline` contains the published OSW Cloud project. Upstream `develop` remains a separate preserved branch. Run `python3 scripts/patch_osw.py`, `npm test`, `scripts/test_shortcuts.sh` and `scripts/build_app.sh`. The candidate is `build/Build/Products/Release/OpenSuperWhisper.app`. These commands do not install or launch it.
+Clone this fork with `git clone --recurse-submodules https://github.com/Albatross679/Cloudscribe.git`. Its default branch `osw-cloud-baseline` contains the published Cloudscribe project. Upstream `develop` remains a separate preserved branch. Run `python3 scripts/patch_osw.py`, `npm test`, `scripts/test_shortcuts.sh` and `scripts/build_app.sh`. The candidate is `build/Build/Products/Release/Cloudscribe.app`. These commands do not install or launch it.
 
 App source is tracked at `OpenSuperWhisper/` in the repository root, not in a nested clone. `build/`, `SourcePackages/`, submodule build products and `runs/` are local outputs. Upstream baseline `bef6bc0421d0c010e8f2fb4288c0d74978c8b964` is preserved in git history and recorded in `scripts/patch_osw.py`. Updating to newer upstream behavior is separate work. The personal cloud-dictation-manager now targets the active fork primary at `/Users/qifanwen/Desktop/Vault1/firstmate/projects/OpenSuperWhisper`. Its `--sync` only fast-forwards a clean `osw-cloud-baseline` tree from the fork, refusing feature branches, dirty trees and ahead/diverged commits without resets or pushes. Its `--build` only creates a root-layout candidate, without installation, app lifecycle changes or TCC resets.
 
@@ -78,4 +80,4 @@ Builds stamp their own version and provenance into `Info.plist` (`CFBundleShortV
 
 ## How the patching works
 
-`scripts/patch_osw.py` applies the OSW Cloud changes in place to the tracked root app source. It never clones, resets or replaces a nested upstream checkout. Owner provider/dashboard/credential files remain in `src/client/` and are copied into the app by the generator. Other modifications remain verified exact-string patches with idempotence sentinels. Edit owner sources or the generator rather than only a generated Swift file. Regression tests extract the pinned upstream source from git history into a temporary fixture, apply every patch twice and compare the result with the tracked app tree. See [repository-migration.md](repository-migration.md) for baseline, history and external dependency boundaries.
+`scripts/patch_osw.py` applies the Cloudscribe changes in place to the tracked root app source. It never clones, resets or replaces a nested upstream checkout. Owner provider/dashboard/credential files remain in `src/client/` and are copied into the app by the generator. Other modifications remain verified exact-string patches with idempotence sentinels. Edit owner sources or the generator rather than only a generated Swift file. Regression tests extract the pinned upstream source from git history into a temporary fixture, apply every patch twice and compare the result with the tracked app tree. See [repository-migration.md](repository-migration.md) for baseline, history and external dependency boundaries.

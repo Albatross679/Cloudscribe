@@ -11,9 +11,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP="$ROOT/build/Build/Products/Release/OpenSuperWhisper.app"
-VOL_NAME="OSW Cloud"
-DMG="$ROOT/runs/OSW Cloud.dmg"
+APP="$ROOT/build/Build/Products/Release/Cloudscribe.app"
+VOL_NAME="Cloudscribe"
+DMG="$ROOT/runs/Cloudscribe.dmg"
 
 IDENTITY="${1:-}"
 KEYCHAIN_PROFILE="${2:-}"
@@ -53,7 +53,7 @@ UNSIGNED and un-notarized. Gatekeeper will block this app on other Macs.
 To open it, Control-click (or right-click) the app, choose Open, then confirm.
 Alternatively, after copying it to /Applications, run:
 
-  xattr -d com.apple.quarantine "/Applications/OSW Cloud.app"
+  xattr -d com.apple.quarantine "/Applications/Cloudscribe.app"
 
 Distributing means an Apple Developer account, then rerunning this with the
 identity and a notarytool keychain profile.

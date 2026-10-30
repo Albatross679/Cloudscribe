@@ -147,7 +147,7 @@ final class CloudflareSetupViewModel: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .microphoneDenied:
-                return "Microphone access is required. Allow OSW Cloud in System Settings > Privacy & Security > Microphone, then try again."
+                return "Microphone access is required. Allow Cloudscribe in System Settings > Privacy & Security > Microphone, then try again."
             case .noMicrophone:
                 return "No microphone is available. Connect or select a microphone, then try again."
             case .noAudio:
