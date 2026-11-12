@@ -9,6 +9,11 @@ eleven rows after them were added from OpenRouter page snapshots on 2026-10-18
 between about 15:30 and 15:45 UTC, without any live transcription request.
 The two Voxtral Transcribe 3 rows were added from the OpenRouter models API and
 model pages on 2026-10-27, also without any live transcription request.
+On 2026-11-12 around 16:50 UTC the OpenRouter rows were re-checked against the
+models API and model pages, changed prices were updated, and the Grok STT 2.0,
+Parakeet Ultra and Nemotron 3.5 Transcribe rows were added, again without any
+live transcription request. Grok STT 2.0 replaces Grok STT 1.0, which OpenRouter
+retires on 2026-11-15.
 These are dated snapshots. The app's OpenRouter price view fetches current
 OpenRouter prices, so use it when a row here may have changed.
 
@@ -37,21 +42,21 @@ paid usage.
 | Cloudflare | `whisper-tiny-en` / `@cf/openai/whisper-tiny-en` | Unavailable in current public pricing table | Not published comparably |
 | Hugging Face | `whisper-large-v3-turbo` / `openai/whisper-large-v3-turbo` | Compute time × underlying hardware rate; no fixed audio-minute price | Not published comparably |
 | Hugging Face | `whisper-large-v3` / `openai/whisper-large-v3` | Compute time × underlying hardware rate; no fixed audio-minute price | Not published comparably |
-| OpenRouter | `whisper-large-v3-turbo` / `openai/whisper-large-v3-turbo` | DeepInfra: $0.000003/audio sec (about $0.00018/audio min; display-rounded) | DeepInfra P50 2.34 s |
-| OpenRouter | `whisper-large-v3` / `openai/whisper-large-v3` | DeepInfra: $0.000008/audio sec (about $0.00048/audio min; display-rounded) | DeepInfra P50 1.56 s |
-| OpenRouter | `nova-3` / `deepgram/nova-3` | Deepgram: $0.000072/audio sec (about $0.00432/audio min; multilingual $0.000087/sec) | Deepgram P50 0.66 s |
+| OpenRouter | `whisper-large-v3-turbo` / `openai/whisper-large-v3-turbo` | DeepInfra: $0.00000333/audio sec (about $0.0002/audio min) | DeepInfra P50 2.34 s |
+| OpenRouter | `whisper-large-v3` / `openai/whisper-large-v3` | DeepInfra: $0.0000075/audio sec ($0.00045/audio min) | DeepInfra P50 1.56 s |
+| OpenRouter | `nova-3` / `deepgram/nova-3` | Deepgram: $0.0000716667/audio sec (about $0.0043/audio min; multilingual $0.000087/sec) | Deepgram P50 0.66 s |
 | OpenRouter | `gpt-4o-mini-transcribe` / `openai/gpt-4o-mini-transcribe` | OpenAI: $1.25/M input tokens + $5/M output tokens | OpenAI P50 0.79 s |
 | OpenRouter | `gpt-4o-transcribe` / `openai/gpt-4o-transcribe` | OpenAI: $2.50/M input tokens + $10/M output tokens | OpenAI P50 0.79 s |
 | OpenRouter | `gemini-3.5-transcribe` / `google/gemini-3.5-transcribe` | Google AI Studio: $2/M input tokens + $12/M output tokens | Google AI Studio P50 2.45 s |
 | OpenRouter | `fish-audio/transcribe-1-pro` | Fish Audio: $0.0001/audio sec ($0.006/audio min) | Fish Audio P50 0.14 s |
-| OpenRouter | `assemblyai/universal-3-5-pro` | AssemblyAI: $0.000125/audio sec ($0.0075/audio min; prompted $0.000139/sec) | AssemblyAI P50 0.93 s |
+| OpenRouter | `assemblyai/universal-3-5-pro` | AssemblyAI: $0.0000833333/audio sec (about $0.005/audio min) | AssemblyAI P50 0.93 s |
 | OpenRouter | `meta/muse-voice-transcribe-1.0` | Meta: $0.00005/audio sec ($0.003/audio min) | Meta P50 1.30 s |
 | OpenRouter | `microsoft/mai-transcribe-2` | Azure: $0.10/audio hour ($0.0016667/audio min) | Azure P50 0.75 s |
-| OpenRouter | `qwen/qwen3-asr-1.7b` | DeepInfra: $0.000008/audio sec (about $0.00048/audio min; display-rounded) | DeepInfra P50 1.74 s |
-| OpenRouter | `qwen/qwen3-asr-0.6b` | DeepInfra: $0.000003/audio sec (about $0.00018/audio min; display-rounded) | DeepInfra P50 0.81 s |
+| OpenRouter | `qwen/qwen3-asr-1.7b` | DeepInfra: $0.0000075/audio sec ($0.00045/audio min) | DeepInfra P50 1.74 s |
+| OpenRouter | `qwen/qwen3-asr-0.6b` | DeepInfra: $0.00000333/audio sec (about $0.0002/audio min) | DeepInfra P50 0.81 s |
 | OpenRouter | `openai/gpt-transcribe` | OpenAI: $0.000075/audio sec ($0.0045/audio min) | OpenAI P50 0.77 s |
-| OpenRouter | `elevenlabs/scribe-v2` | ElevenLabs: $0.000031/audio sec (about $0.00183/audio min; display-rounded; launch price, half of list until 2026-10-19) | ElevenLabs P50 1.19 s |
-| OpenRouter | `elevenlabs/scribe-v2-medical` | ElevenLabs: $0.000031/audio sec (about $0.00183/audio min; display-rounded; launch price, half of list until 2026-10-19) | ElevenLabs P50 0.39 s |
+| OpenRouter | `elevenlabs/scribe-v2` | ElevenLabs: $0.0000611111/audio sec (about $0.00367/audio min; list price since the launch discount ended 2026-10-19) | ElevenLabs P50 1.19 s |
+| OpenRouter | `elevenlabs/scribe-v2-medical` | ElevenLabs: $0.0000611111/audio sec (about $0.00367/audio min; list price since the launch discount ended 2026-10-19) | ElevenLabs P50 0.39 s |
 | OpenRouter | `assemblyai/universal-3-6-pro` | AssemblyAI: $0.000083/audio sec (about $0.005/audio min; display-rounded; prompted $0.000097/sec) | AssemblyAI P50 1.20 s |
 | OpenRouter | `fish-audio/transcribe-1` | Fish Audio: $0.0001/audio sec ($0.006/audio min) | Fish Audio P50 0.84 s |
 | OpenRouter | `google/chirp-3` | Google: $0.000267/audio sec (about $0.016/audio min; display-rounded) | Google P50 2.38 s |
@@ -62,13 +67,15 @@ paid usage.
 | OpenRouter | `mistralai/voxtral-mini-transcribe-3-0` | Mistral: $0.0000583333/audio sec (about $0.0035/audio min) | Mistral P50 0.26 s |
 | OpenRouter | `mistralai/voxtral-small-transcribe-3-0` | Mistral: $0.0000666667/audio sec (about $0.004/audio min) | Mistral P50 0.57 s |
 | OpenRouter | `nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b` | DeepInfra: $0.000003/audio sec (about $0.0002/audio min; display-rounded) | DeepInfra P50 1.51 s |
-| OpenRouter | `nvidia/parakeet-tdt-0.6b-v3` | Together: $0.000025/audio sec ($0.0015/audio min) | Together P50 0.90 s |
+| OpenRouter | `nvidia/parakeet-tdt-0.6b-v3` | Prime Intellect: $0.0000166667/audio sec (about $0.001/audio min; Together $0.000025/sec) | Prime Intellect P50 0.85 s |
 | OpenRouter | `openai/whisper-1` | OpenAI: $0.0001/audio sec ($0.006/audio min) | OpenAI P50 1.47 s |
-| OpenRouter | `x-ai/grok-stt-1.0` | xAI: $0.000028/audio sec (about $0.00167/audio min; display-rounded) | xAI P50 0.43 s |
+| OpenRouter | `x-ai/grok-stt-2.0` | xAI: $0.0000277778/audio sec (about $0.00167/audio min) | xAI P50 0.83 s |
+| OpenRouter | `moondream/parakeet-ultra` | Prime Intellect: $0.0000166667/audio sec (about $0.001/audio min) | Prime Intellect P50 1.52 s |
+| OpenRouter | `nvidia/nemotron-3.5-transcribe` | Prime Intellect: $0.0000166667/audio sec (about $0.001/audio min; DeepInfra $0.0000333/sec) | Prime Intellect P50 1.14 s |
 
 ## Primary sources
 
 - [Cloudflare Workers AI audio pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/#audio-model-pricing)
 - [Hugging Face Inference Providers pricing](https://huggingface.co/docs/inference-providers/pricing#hf-inference-cost)
 - [OpenRouter speech-to-text request and response schema](https://openrouter.ai/docs/api/api-reference/stt/create-transcription)
-- OpenRouter model pages: [Whisper Turbo](https://openrouter.ai/openai/whisper-large-v3-turbo), [Whisper Large V3](https://openrouter.ai/openai/whisper-large-v3), [Nova-3](https://openrouter.ai/deepgram/nova-3), [GPT-4o mini Transcribe](https://openrouter.ai/openai/gpt-4o-mini-transcribe), [GPT-4o Transcribe](https://openrouter.ai/openai/gpt-4o-transcribe), [Gemini 3.5 Transcribe](https://openrouter.ai/google/gemini-3.5-transcribe), [Fish Audio Transcribe 1 Pro](https://openrouter.ai/fish-audio/transcribe-1-pro), [Universal-3.5 Pro](https://openrouter.ai/assemblyai/universal-3-5-pro), [Muse Voice Transcribe 1.0](https://openrouter.ai/meta/muse-voice-transcribe-1.0), [MAI-Transcribe 2](https://openrouter.ai/microsoft/mai-transcribe-2), [Qwen3 ASR 1.7B](https://openrouter.ai/qwen/qwen3-asr-1.7b), [Qwen3 ASR 0.6B](https://openrouter.ai/qwen/qwen3-asr-0.6b), [GPT Transcribe](https://openrouter.ai/openai/gpt-transcribe), [Scribe v2](https://openrouter.ai/elevenlabs/scribe-v2), [Scribe v2 Medical](https://openrouter.ai/elevenlabs/scribe-v2-medical), [Universal-3.6 Pro](https://openrouter.ai/assemblyai/universal-3-6-pro), [Fish Audio Transcribe 1](https://openrouter.ai/fish-audio/transcribe-1), [Chirp 3](https://openrouter.ai/google/chirp-3), [MAI-Transcribe 1.5](https://openrouter.ai/microsoft/mai-transcribe-1.5), [Voxtral Mini 3B 2507](https://openrouter.ai/mistralai/voxtral-mini-3b-2507), [Voxtral Mini Transcribe](https://openrouter.ai/mistralai/voxtral-mini-transcribe), [Voxtral Small 24B 2507 STT](https://openrouter.ai/mistralai/voxtral-small-24b-2507-stt), [Nemotron 3.5 ASR Streaming Multilingual 0.6B](https://openrouter.ai/nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b), [Parakeet TDT 0.6B v3](https://openrouter.ai/nvidia/parakeet-tdt-0.6b-v3), [Whisper 1](https://openrouter.ai/openai/whisper-1), [Grok STT 1.0](https://openrouter.ai/x-ai/grok-stt-1.0), [Voxtral Mini Transcribe 3](https://openrouter.ai/mistralai/voxtral-mini-transcribe-3-0), and [Voxtral Small Transcribe 3](https://openrouter.ai/mistralai/voxtral-small-transcribe-3-0).
+- OpenRouter model pages: [Whisper Turbo](https://openrouter.ai/openai/whisper-large-v3-turbo), [Whisper Large V3](https://openrouter.ai/openai/whisper-large-v3), [Nova-3](https://openrouter.ai/deepgram/nova-3), [GPT-4o mini Transcribe](https://openrouter.ai/openai/gpt-4o-mini-transcribe), [GPT-4o Transcribe](https://openrouter.ai/openai/gpt-4o-transcribe), [Gemini 3.5 Transcribe](https://openrouter.ai/google/gemini-3.5-transcribe), [Fish Audio Transcribe 1 Pro](https://openrouter.ai/fish-audio/transcribe-1-pro), [Universal-3.5 Pro](https://openrouter.ai/assemblyai/universal-3-5-pro), [Muse Voice Transcribe 1.0](https://openrouter.ai/meta/muse-voice-transcribe-1.0), [MAI-Transcribe 2](https://openrouter.ai/microsoft/mai-transcribe-2), [Qwen3 ASR 1.7B](https://openrouter.ai/qwen/qwen3-asr-1.7b), [Qwen3 ASR 0.6B](https://openrouter.ai/qwen/qwen3-asr-0.6b), [GPT Transcribe](https://openrouter.ai/openai/gpt-transcribe), [Scribe v2](https://openrouter.ai/elevenlabs/scribe-v2), [Scribe v2 Medical](https://openrouter.ai/elevenlabs/scribe-v2-medical), [Universal-3.6 Pro](https://openrouter.ai/assemblyai/universal-3-6-pro), [Fish Audio Transcribe 1](https://openrouter.ai/fish-audio/transcribe-1), [Chirp 3](https://openrouter.ai/google/chirp-3), [MAI-Transcribe 1.5](https://openrouter.ai/microsoft/mai-transcribe-1.5), [Voxtral Mini 3B 2507](https://openrouter.ai/mistralai/voxtral-mini-3b-2507), [Voxtral Mini Transcribe](https://openrouter.ai/mistralai/voxtral-mini-transcribe), [Voxtral Small 24B 2507 STT](https://openrouter.ai/mistralai/voxtral-small-24b-2507-stt), [Nemotron 3.5 ASR Streaming Multilingual 0.6B](https://openrouter.ai/nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b), [Parakeet TDT 0.6B v3](https://openrouter.ai/nvidia/parakeet-tdt-0.6b-v3), [Whisper 1](https://openrouter.ai/openai/whisper-1), [Voxtral Mini Transcribe 3](https://openrouter.ai/mistralai/voxtral-mini-transcribe-3-0), [Voxtral Small Transcribe 3](https://openrouter.ai/mistralai/voxtral-small-transcribe-3-0), [Grok STT 2.0](https://openrouter.ai/x-ai/grok-stt-2.0), [Parakeet Ultra](https://openrouter.ai/moondream/parakeet-ultra), and [Nemotron 3.5 Transcribe](https://openrouter.ai/nvidia/nemotron-3.5-transcribe).
