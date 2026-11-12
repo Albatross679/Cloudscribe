@@ -2541,6 +2541,21 @@ def patch_hotkey_cancel() -> None:
         }
 """, "Cancel: hotkey while transcribing")
 
+def patch_replaced_openrouter_models() -> None:
+    patch(APP / "Utils" / "AppPreferences.swift",
+        '''            UserDefaults.standard.set(oldPath, forKey: "selectedWhisperModelPath")
+        }
+    }''',
+        '''            UserDefaults.standard.set(oldPath, forKey: "selectedWhisperModelPath")
+        }
+        let openRouterKey = OpenRouterRequest.currentModelKey(openRouterModel)
+        if openRouterKey != openRouterModel {
+            openRouterModel = openRouterKey
+        }
+    }''',
+        "Preferences: move replaced OpenRouter selections to their successor")
+
+
 def patch_indicator_distance() -> None:
     """Keep the indicator near the mouse when the caret anchor is far from it.
 
@@ -2937,6 +2952,7 @@ def main() -> int:
         patch_echo_cancellation()
         patch_hotkey_cancel()
         patch_indicator_distance()
+        patch_replaced_openrouter_models()
     except PatchError as err:
         print(f"\nFAILED: {err}", file=sys.stderr)
         print("Upstream changed. Fix the anchor in this script and rerun.", file=sys.stderr)

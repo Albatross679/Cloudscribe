@@ -43,6 +43,7 @@ enum ProviderRequestTests {
         openRouterSendsBase64ToTheSTTEndpoint()
         openRouterPinsLanguage()
         openRouterRegistersRequestedModels()
+        openRouterMovesReplacedSelections()
         openRouterRejectsOversizedAudio()
         openRouterReadsItsResponse()
         unknownModelsAreRejected()
@@ -184,7 +185,9 @@ enum ProviderRequestTests {
             "nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b",
             "nvidia/parakeet-tdt-0.6b-v3",
             "openai/whisper-1",
-            "x-ai/grok-stt-1.0",
+            "x-ai/grok-stt-2.0",
+            "moondream/parakeet-ultra",
+            "nvidia/nemotron-3.5-transcribe",
         ]
         let ids = OpenRouterRequest.catalog.map(\.id)
         check("every requested id appears once", requested.allSatisfy { requestedID in ids.filter { $0 == requestedID }.count == 1 }, "\(ids)")
@@ -202,6 +205,23 @@ enum ProviderRequestTests {
             let stale = payload(try! OpenRouterRequest.transcription(model: model.key, audio: audio, language: "en"))
             check("\(id) ignores stale pinned language", stale["language"] == nil)
         }
+    }
+
+    static func openRouterMovesReplacedSelections() {
+        section("a saved selection of a replaced openrouter model moves to its successor")
+        let keys = OpenRouterRequest.catalog.map(\.key)
+        check("grok-stt-1.0 is no longer offered", !keys.contains("grok-stt-1.0"))
+        check("grok-stt-1.0 moves to grok-stt-2.0", OpenRouterRequest.currentModelKey("grok-stt-1.0") == "grok-stt-2.0")
+        check("x-ai/grok-stt-1.0 is not sent", !OpenRouterRequest.catalog.map(\.id).contains("x-ai/grok-stt-1.0"))
+        for (old, new) in OpenRouterRequest.replacedModelKeys {
+            check("\(old) is not in the picker", !keys.contains(old))
+            check("\(old) successor \(new) is in the picker", keys.contains(new))
+        }
+        for key in keys {
+            check("\(key) is kept as saved", OpenRouterRequest.currentModelKey(key) == key)
+        }
+        let migrated = payload(try! OpenRouterRequest.transcription(model: OpenRouterRequest.currentModelKey("grok-stt-1.0"), audio: audio, language: "auto"))
+        check("a migrated selection sends grok-stt-2.0", migrated["model"] as? String == "x-ai/grok-stt-2.0", String(describing: migrated["model"]))
     }
 
     // OpenRouter caps uploads at 25 MB. Rejecting locally names a size the user

@@ -32,6 +32,10 @@ final class AppPreferences {
            UserDefaults.standard.string(forKey: "selectedWhisperModelPath") == nil {
             UserDefaults.standard.set(oldPath, forKey: "selectedWhisperModelPath")
         }
+        let openRouterKey = OpenRouterRequest.currentModelKey(openRouterModel)
+        if openRouterKey != openRouterModel {
+            openRouterModel = openRouterKey
+        }
     }
     
     // Engine settings

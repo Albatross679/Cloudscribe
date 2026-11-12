@@ -223,15 +223,38 @@ enum OpenRouterRequest {
             notes: "OpenAI's hosted Whisper API model."
         ),
         CloudModel(
-            key: "grok-stt-1.0",
-            id: "x-ai/grok-stt-1.0",
-            label: "Grok STT 1.0",
+            key: "grok-stt-2.0",
+            id: "x-ai/grok-stt-2.0",
+            label: "Grok STT 2.0",
             languages: [],
-            notes: "xAI speech-to-text; this app uses automatic language detection."
+            notes: "xAI speech-to-text, successor to Grok STT 1.0; this app uses automatic language detection."
+        ),
+        CloudModel(
+            key: "parakeet-ultra",
+            id: "moondream/parakeet-ultra",
+            label: "Moondream Parakeet Ultra",
+            languages: [],
+            notes: "Moondream's post-trained Parakeet TDT 0.6B v3 with a lower word error rate."
+        ),
+        CloudModel(
+            key: "nemotron-3.5-transcribe",
+            id: "nvidia/nemotron-3.5-transcribe",
+            label: "NVIDIA Nemotron 3.5 Transcribe",
+            languages: [],
+            notes: "NVIDIA open-weight multilingual speech recognition in 40 languages."
         ),
     ]
 
     static let defaultModelKey = "whisper-large-v3-turbo"
+
+    /// Picker keys that were removed in favour of a successor. A saved
+    /// selection moves to the successor rather than falling back to the
+    /// default model. Grok STT 1.0 expires on OpenRouter on 2026-11-15.
+    static let replacedModelKeys = ["grok-stt-1.0": "grok-stt-2.0"]
+
+    static func currentModelKey(_ key: String) -> String {
+        replacedModelKeys[key] ?? key
+    }
 
     /// Text models for the cleanup pass over the standard chat route.
     static let cleanupModels: [(key: String, id: String, label: String)] = [

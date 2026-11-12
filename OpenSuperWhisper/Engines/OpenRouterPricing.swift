@@ -9,7 +9,7 @@ import Combine
 /// models, an audio hour for others, and an input token for the GPT-4o and
 /// Gemini transcription models. `units` therefore records the unit OpenRouter
 /// publishes on each model page (its provider table header reads Audio/sec,
-/// Audio/hr, or Input/M and Output/M), checked 2026-10-18. A model without a
+/// Audio/hr, or Input/M and Output/M), checked 2026-10-18 and 2026-11-12. A model without a
 /// recorded unit shows its raw field values instead of a guessed conversion.
 enum OpenRouterPricing {
     static let endpoint = URL(string: "\(OpenRouterRequest.host)/models?output_modalities=transcription")!
@@ -51,7 +51,9 @@ enum OpenRouterPricing {
         "nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b": .audioSecond,
         "nvidia/parakeet-tdt-0.6b-v3": .audioSecond,
         "openai/whisper-1": .audioSecond,
-        "x-ai/grok-stt-1.0": .audioSecond,
+        "x-ai/grok-stt-2.0": .audioSecond,
+        "moondream/parakeet-ultra": .audioSecond,
+        "nvidia/nemotron-3.5-transcribe": .audioSecond,
     ]
 
     /// One `pricing` field exactly as OpenRouter sent it.
